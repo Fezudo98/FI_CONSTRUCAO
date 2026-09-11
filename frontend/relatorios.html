@@ -5,18 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatórios — F.I Construção</title>
 <link rel="stylesheet" href="/static/css/app.css">
-<style>
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-  .kpi { background: #F4F6FB; border-radius: 10px; padding: 14px; text-align: center; }
-  .kpi .value { font-size: 1.3rem; font-weight: 700; color: var(--brand-primary-dark); }
-  .kpi .label { font-size: .75rem; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
-  .chart-wrap { position: relative; height: 260px; }
-  .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
-  @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
-</style>
 </head>
 <body>
+  <aside class="sidebar" id="main-nav"><a class="sidebar-brand" href="/index.html"><img src="/static/img/logo.jpg" alt=""><span><strong>F.I Construção</strong><small>Gestão do depósito</small></span></a><nav class="sidebar-nav" aria-label="Principal"><a href="/index.html"><span class="nav-icon" data-icon="panel"></span>Painel</a><a href="/pdv.html"><span class="nav-icon" data-icon="sale"></span>PDV</a><a href="/operacao.html"><span class="nav-icon" data-icon="operation"></span>Operação</a><a href="/relatorios.html" class="active" aria-current="page"><span class="nav-icon" data-icon="report"></span>Relatórios</a></nav><div class="sidebar-foot">Operação local e segura</div></aside>
+  <div class="sidebar-scrim" hidden></div>
   <div class="topbar">
+    <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="main-nav"><span class="nav-icon" data-icon="menu"></span></button>
     <div class="brand"><img src="/static/img/logo.jpg" alt="F.I Construção"> F.I Construção</div>
     <nav>
       <a href="/index.html">Painel</a>
@@ -31,6 +25,7 @@
   </div>
 
   <main>
+    <header class="page-head"><div class="page-head-copy"><h1>Relatórios</h1><p>Resultados de vendas, margem e produtos no período escolhido.</p></div></header>
     <div class="card">
       <h2>Período</h2>
       <div class="grid grid-2" style="max-width:420px">
@@ -68,6 +63,7 @@
   </main>
 
 <script src="/static/js/vendor/chart.umd.min.js"></script>
+<script src="/static/js/ui.js"></script>
 <script src="/static/js/auth.js"></script>
 <script>
 let salesChart, paymentChart, productsChart;
@@ -107,7 +103,7 @@ function renderSalesChart(rows) {
     type: 'line',
     data: {
       labels: rows.map(r => r.day),
-      datasets: [{ label: 'Vendas (R$)', data: rows.map(r => parseFloat(r.total)), borderColor: '#08299B', backgroundColor: 'rgba(8,41,155,.1)', fill: true, tension: .3 }],
+      datasets: [{ label: 'Vendas (R$)', data: rows.map(r => parseFloat(r.total)), borderColor: '#123B5D', backgroundColor: 'rgba(18,59,93,.1)', fill: true, tension: .3 }],
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } },
   };
@@ -121,7 +117,7 @@ function renderPaymentChart(rows) {
     type: 'doughnut',
     data: {
       labels: rows.map(r => labels[r.method] || r.method),
-      datasets: [{ data: rows.map(r => parseFloat(r.total)), backgroundColor: ['#08299B', '#FFA20A', '#1B8A4B', '#C22B2B', '#6B7FE8', '#A85D00'] }],
+      datasets: [{ data: rows.map(r => parseFloat(r.total)), backgroundColor: ['#123B5D', '#F28C28', '#287A4B', '#B93632', '#577A8D', '#945214'] }],
     },
     options: { responsive: true, maintainAspectRatio: false },
   };
@@ -134,7 +130,7 @@ function renderProductsChart(rows) {
     type: 'bar',
     data: {
       labels: rows.map(r => r.name),
-      datasets: [{ label: 'Quantidade vendida', data: rows.map(r => parseFloat(r.quantity)), backgroundColor: '#FFA20A' }],
+      datasets: [{ label: 'Quantidade vendida', data: rows.map(r => parseFloat(r.quantity)), backgroundColor: '#F28C28' }],
     },
     options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } },
   };

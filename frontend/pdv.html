@@ -6,15 +6,9 @@
 <title>PDV — F.I Construção</title>
 <link rel="stylesheet" href="/static/css/app.css">
 <style>
-  .pdv-layout { display: grid; grid-template-columns: 1fr 380px; gap: 16px; align-items: start; }
-  @media (max-width: 900px) { .pdv-layout { grid-template-columns: 1fr; } }
   .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: .88rem; }
   .cart-item .info { flex: 1; }
   .cart-item .qty { color: var(--muted); font-size: .8rem; }
-  .cart-total { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 700; padding-top: 10px; margin-top: 10px; border-top: 2px solid var(--border); }
-  .search-result { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; }
-  .search-result:hover { background: #F4F6FB; }
-  #search-results, #customer-results { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; }
 
   #receipt-overlay {
     position: fixed; inset: 0; background: rgba(10,15,30,.55); display: flex;
@@ -39,7 +33,10 @@
 </style>
 </head>
 <body>
+  <aside class="sidebar" id="main-nav"><a class="sidebar-brand" href="/index.html"><img src="/static/img/logo.jpg" alt=""><span><strong>F.I Construção</strong><small>Gestão do depósito</small></span></a><nav class="sidebar-nav" aria-label="Principal"><a href="/index.html"><span class="nav-icon" data-icon="panel"></span>Painel</a><a href="/pdv.html" class="active" aria-current="page"><span class="nav-icon" data-icon="sale"></span>PDV</a><a href="/operacao.html"><span class="nav-icon" data-icon="operation"></span>Operação</a><a href="/relatorios.html"><span class="nav-icon" data-icon="report"></span>Relatórios</a></nav><div class="sidebar-foot">Operação local e segura</div></aside>
+  <div class="sidebar-scrim" hidden></div>
   <div class="topbar">
+    <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="main-nav"><span class="nav-icon" data-icon="menu"></span></button>
     <div class="brand"><img src="/static/img/logo.jpg" alt="F.I Construção"> F.I Construção</div>
     <nav>
       <a href="/index.html">Painel</a>
@@ -54,6 +51,7 @@
   </div>
 
   <main>
+    <header class="page-head"><div class="page-head-copy"><h1>PDV</h1><p>Venda rápida com busca, leitor de código de barras e baixa automática.</p></div></header>
     <div id="alert" class="alert err" hidden></div>
 
     <!-- Caixa fechado -->
@@ -159,6 +157,7 @@
     </div>
   </div>
 
+<script src="/static/js/ui.js"></script>
 <script src="/static/js/auth.js"></script>
 <script>
 let cart = [];

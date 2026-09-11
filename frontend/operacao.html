@@ -5,17 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Operação — F.I Construção</title>
 <link rel="stylesheet" href="/static/css/app.css">
-<style>
-  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-  .tabs button { background: #EDF0FA; color: var(--brand-primary-dark); padding: 8px 16px; }
-  .tabs button.active { background: var(--brand-primary); color: #fff; }
-  .section { display: none; }
-  .section.active { display: block; }
-  .soon { text-align: center; padding: 40px 20px; color: var(--muted); }
-</style>
 </head>
 <body>
+  <aside class="sidebar" id="main-nav"><a class="sidebar-brand" href="/index.html"><img src="/static/img/logo.jpg" alt=""><span><strong>F.I Construção</strong><small>Gestão do depósito</small></span></a><nav class="sidebar-nav" aria-label="Principal"><a href="/index.html"><span class="nav-icon" data-icon="panel"></span>Painel</a><a href="/pdv.html"><span class="nav-icon" data-icon="sale"></span>PDV</a><a href="/operacao.html" class="active" aria-current="page"><span class="nav-icon" data-icon="operation"></span>Operação</a><a href="/relatorios.html"><span class="nav-icon" data-icon="report"></span>Relatórios</a></nav><div class="sidebar-foot">Operação local e segura</div></aside>
+  <div class="sidebar-scrim" hidden></div>
   <div class="topbar">
+    <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="main-nav"><span class="nav-icon" data-icon="menu"></span></button>
     <div class="brand"><img src="/static/img/logo.jpg" alt="F.I Construção"> F.I Construção</div>
     <nav>
       <a href="/index.html">Painel</a>
@@ -30,6 +25,7 @@
   </div>
 
   <main>
+    <header class="page-head"><div class="page-head-copy"><h1>Operação</h1><p>Estoque, atendimento, compras, financeiro e entregas em um só lugar.</p></div></header>
     <div id="alert" class="alert err" hidden></div>
 
     <div class="tabs">
@@ -320,6 +316,7 @@
     </div>
   </main>
 
+<script src="/static/js/ui.js"></script>
 <script src="/static/js/auth.js"></script>
 <script>
 function showAlert(msg, ok) {
