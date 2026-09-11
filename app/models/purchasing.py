@@ -62,6 +62,7 @@ class PurchaseOrder(db.Model, TimestampMixin):
     status = db.Column(db.String(20), nullable=False, default=PO_DRAFT)
     total = db.Column(db.Numeric(12, 2), nullable=False, default=0)
 
+    supplier = db.relationship("Supplier")
     items = db.relationship("PurchaseOrderItem", back_populates="purchase_order", cascade="all, delete-orphan")
     receipts = db.relationship("PurchaseReceipt", back_populates="purchase_order", cascade="all, delete-orphan")
 

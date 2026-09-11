@@ -21,6 +21,7 @@ class Payable(db.Model, TimestampMixin):
     due_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), nullable=False, default=PAYABLE_OPEN)
 
+    supplier = db.relationship("Supplier")
     settlements = db.relationship("PayableSettlement", back_populates="payable", cascade="all, delete-orphan")
 
     @property

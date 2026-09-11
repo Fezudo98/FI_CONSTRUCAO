@@ -91,18 +91,182 @@
 
       <div class="card">
         <h2>Produtos cadastrados</h2>
-        <table id="products-table">
+        <div class="table-responsive"><table id="products-table">
           <thead><tr><th>SKU</th><th>Nome</th><th>Unidade</th><th>Custo</th><th>Venda</th></tr></thead>
           <tbody></tbody>
-        </table>
+        </table></div>
       </div>
     </div>
 
-    <div class="section" id="section-orcamentos"><div class="soon">📋 Módulo de orçamentos — próxima fase de implementação.</div></div>
-    <div class="section" id="section-pedidos"><div class="soon">🚚 Módulo de pedidos — próxima fase de implementação.</div></div>
-    <div class="section" id="section-compras"><div class="soon">🏭 Módulo de compras — próxima fase de implementação.</div></div>
-    <div class="section" id="section-financeiro"><div class="soon">💰 Módulo financeiro — próxima fase de implementação.</div></div>
-    <div class="section" id="section-entregas"><div class="soon">🛻 Módulo de entregas — próxima fase de implementação.</div></div>
+    <!-- ORCAMENTOS -->
+    <div class="section" id="section-orcamentos">
+      <div class="card">
+        <h2>Novo orçamento</h2>
+        <div class="grid grid-3">
+          <div><label>Cliente</label><input type="text" id="quote-customer"></div>
+          <div><label>Documento (opcional)</label><input type="text" id="quote-document"></div>
+          <div><label>Telefone (opcional)</label><input type="text" id="quote-phone"></div>
+        </div>
+        <div id="quote-items-builder"></div>
+        <button class="primary" id="quote-create-btn" style="margin-top:12px">Criar orçamento</button>
+      </div>
+
+      <div class="card">
+        <h2>Orçamentos</h2>
+        <div class="grid grid-2" style="margin-bottom:12px">
+          <div>
+            <label>Endereço de origem (usado ao converter em pedido)</label>
+            <select id="quote-convert-location"></select>
+          </div>
+        </div>
+        <div class="table-responsive"><table id="quotes-table">
+          <thead><tr><th>#</th><th>Cliente</th><th>Total</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- PEDIDOS -->
+    <div class="section" id="section-pedidos">
+      <div class="card">
+        <h2>Novo pedido direto</h2>
+        <div class="grid grid-3">
+          <div><label>Cliente</label><input type="text" id="order-customer"></div>
+          <div>
+            <label>Endereço de origem</label>
+            <select id="order-location"></select>
+          </div>
+          <div style="display:flex; align-items:flex-end; padding-bottom:9px">
+            <label style="display:flex; align-items:center; gap:6px; margin:0">
+              <input type="checkbox" id="order-is-delivery" style="width:auto"> É entrega
+            </label>
+          </div>
+        </div>
+        <div id="order-items-builder"></div>
+        <button class="primary" id="order-create-btn" style="margin-top:12px">Criar pedido</button>
+      </div>
+
+      <div class="card">
+        <h2>Pedidos</h2>
+        <div class="table-responsive"><table id="orders-table">
+          <thead><tr><th>#</th><th>Cliente</th><th>Total</th><th>Status</th><th>Entrega</th><th>Ações</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- COMPRAS -->
+    <div class="section" id="section-compras">
+      <div class="card">
+        <h2>Novo fornecedor</h2>
+        <div class="grid grid-3">
+          <div><label>Nome</label><input type="text" id="supplier-name"></div>
+          <div><label>Documento</label><input type="text" id="supplier-document"></div>
+          <div><label>Telefone</label><input type="text" id="supplier-phone"></div>
+        </div>
+        <button class="primary" id="supplier-create-btn" style="margin-top:12px">Criar fornecedor</button>
+      </div>
+
+      <div class="card">
+        <h2>Novo pedido de compra</h2>
+        <div class="grid grid-2">
+          <div>
+            <label>Fornecedor</label>
+            <select id="po-supplier"></select>
+          </div>
+        </div>
+        <div id="po-items-builder"></div>
+        <button class="primary" id="po-create-btn" style="margin-top:12px">Criar pedido de compra</button>
+      </div>
+
+      <div class="card" id="po-receive-panel" hidden>
+        <h2>Receber pedido de compra #<span id="po-receive-id"></span></h2>
+        <div class="grid grid-2">
+          <div><label>Endereço de recebimento</label><select id="po-receive-location"></select></div>
+        </div>
+        <div class="table-responsive"><table style="margin-top:10px">
+          <thead><tr><th>Produto</th><th>Pendente</th><th>Receber agora</th></tr></thead>
+          <tbody id="po-receive-items"></tbody>
+        </table></div>
+        <div style="display:flex; gap:8px; margin-top:12px">
+          <button class="primary" id="po-receive-confirm" style="flex:1">Confirmar recebimento</button>
+          <button class="secondary" id="po-receive-cancel">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Pedidos de compra</h2>
+        <div class="table-responsive"><table id="po-table">
+          <thead><tr><th>#</th><th>Fornecedor</th><th>Total</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- FINANCEIRO -->
+    <div class="section" id="section-financeiro">
+      <div class="card">
+        <h2>Contas a pagar</h2>
+        <div class="table-responsive"><table id="payables-table">
+          <thead><tr><th>Fornecedor</th><th>Descrição</th><th>Total</th><th>Pago</th><th>Aberto</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ENTREGAS -->
+    <div class="section" id="section-entregas">
+      <div class="card">
+        <h2>Transportadora / veículo / motorista</h2>
+        <div class="grid grid-3">
+          <div>
+            <label>Nova transportadora</label>
+            <input type="text" id="carrier-name" placeholder="Nome">
+            <button class="secondary" id="carrier-create-btn" style="margin-top:8px; width:100%">Criar</button>
+          </div>
+          <div>
+            <label>Novo veículo</label>
+            <select id="vehicle-carrier" style="margin-bottom:6px"></select>
+            <input type="text" id="vehicle-plate" placeholder="Placa">
+            <button class="secondary" id="vehicle-create-btn" style="margin-top:8px; width:100%">Criar</button>
+          </div>
+          <div>
+            <label>Novo motorista</label>
+            <select id="driver-carrier" style="margin-bottom:6px"></select>
+            <input type="text" id="driver-name" placeholder="Nome">
+            <button class="secondary" id="driver-create-btn" style="margin-top:8px; width:100%">Criar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Agendar entrega de um pedido</h2>
+        <div class="grid grid-2">
+          <div>
+            <label>Pedido (marcado como entrega)</label>
+            <select id="delivery-order"></select>
+          </div>
+          <div><label>Endereço de entrega</label><input type="text" id="delivery-address"></div>
+          <div>
+            <label>Veículo (opcional)</label>
+            <select id="delivery-vehicle"></select>
+          </div>
+          <div>
+            <label>Motorista (opcional)</label>
+            <select id="delivery-driver"></select>
+          </div>
+        </div>
+        <button class="primary" id="delivery-create-btn" style="margin-top:12px">Agendar entrega</button>
+      </div>
+
+      <div class="card">
+        <h2>Entregas</h2>
+        <div class="table-responsive"><table id="deliveries-table">
+          <thead><tr><th>#</th><th>Cliente</th><th>Endereço</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
   </main>
 
 <script src="/static/js/auth.js"></script>
@@ -130,23 +294,36 @@ if (hash) {
   if (btn) btn.click();
 }
 
+let PRODUCTS = [];
+let LOCATIONS = [];
+
 async function loadProducts() {
   const resp = await fetch('/api/products');
   const data = await resp.json();
+  PRODUCTS = data.products;
+
   const tbody = document.querySelector('#products-table tbody');
   tbody.innerHTML = data.products.map(p => `
     <tr><td>${p.sku}</td><td>${p.name}</td><td>${p.base_unit}</td><td>R$ ${p.cost_price}</td><td>R$ ${p.sale_price}</td></tr>
   `).join('');
 
-  const select = document.getElementById('adjust-product');
-  select.innerHTML = data.products.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('');
+  document.getElementById('adjust-product').innerHTML =
+    data.products.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('');
+
+  document.querySelectorAll('.item-builder').forEach(b => b.refreshProductOptions());
 }
 
 async function loadLocations() {
   const resp = await fetch('/api/inventory/locations');
   const data = await resp.json();
-  const select = document.getElementById('adjust-location');
-  select.innerHTML = data.locations.map(l => `<option value="${l.id}">${l.code} - ${l.description || ''}</option>`).join('');
+  LOCATIONS = data.locations;
+  const optionsHtml = data.locations.map(l => `<option value="${l.id}">${l.code} - ${l.description || ''}</option>`).join('');
+
+  document.getElementById('adjust-location').innerHTML = optionsHtml;
+  ['order-location', 'quote-convert-location', 'po-receive-location'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = optionsHtml;
+  });
 }
 
 document.getElementById('create-loc-btn').addEventListener('click', async () => {
@@ -206,8 +383,538 @@ document.getElementById('adjust-btn').addEventListener('click', async () => {
   showAlert('Saldo ajustado para ' + data.balance.quantity + '.', true);
 });
 
+// ---------- helpers compartilhados ----------
+
+function actionBtn(fn, label, cls) {
+  return `<button type="button" class="${cls || 'secondary'}" style="padding:5px 10px; font-size:.75rem; margin:2px 2px 0 0" onclick="${fn}">${label}</button>`;
+}
+
+const STATUS_BADGE = {
+  draft: 'warn', sent: 'warn', approved: 'ok', rejected: 'err', converted: 'ok',
+  reserved: 'warn', separated: 'warn', picked_up: 'ok', delivered: 'ok', cancelled: 'err',
+  open: 'warn', partially_paid: 'warn', paid: 'ok',
+  scheduled: 'warn', in_route: 'warn', completed: 'ok', failed: 'err',
+  partially_received: 'warn', received: 'ok',
+};
+const STATUS_LABEL = {
+  draft: 'Rascunho', sent: 'Enviado', approved: 'Aprovado', rejected: 'Rejeitado', converted: 'Convertido',
+  reserved: 'Reservado', separated: 'Separado', picked_up: 'Retirado', delivered: 'Entregue', cancelled: 'Cancelado',
+  open: 'Em aberto', partially_paid: 'Parcial', paid: 'Pago',
+  scheduled: 'Agendado', in_route: 'Em rota', completed: 'Concluído', failed: 'Falhou',
+  partially_received: 'Parcial', received: 'Recebido',
+};
+function statusBadge(html_id_prefix, s) { return `<span class="badge ${STATUS_BADGE[s] || 'warn'}">${STATUS_LABEL[s] || s}</span>`; }
+
+function createItemBuilder(containerId) {
+  const container = document.getElementById(containerId);
+  container.classList.add('item-builder');
+  let items = [];
+
+  function updateUnitPrice(productSelect, unitSelect, priceInput) {
+    const product = PRODUCTS.find(p => p.id == productSelect.value);
+    if (!product) return;
+    if (unitSelect.value === product.base_unit) { priceInput.value = product.sale_price; return; }
+    const conv = product.conversions.find(c => c.unit === unitSelect.value);
+    priceInput.value = conv ? (parseFloat(product.sale_price) * parseFloat(conv.factor_to_base)).toFixed(4) : product.sale_price;
+  }
+
+  function render() {
+    const productOptions = PRODUCTS.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('');
+    container.innerHTML = `
+      <div class="grid grid-3" style="margin-top:12px">
+        <div><label>Produto</label><select class="ib-product">${productOptions}</select></div>
+        <div><label>Unidade</label><select class="ib-unit"></select></div>
+        <div><label>Quantidade</label><input type="number" step="0.01" class="ib-qty" value="1"></div>
+      </div>
+      <div class="grid grid-2" style="margin-top:8px">
+        <div><label>Preço unitário</label><input type="number" step="0.0001" class="ib-price"></div>
+        <div style="display:flex; align-items:flex-end"><button type="button" class="secondary ib-add" style="width:100%">+ Adicionar item</button></div>
+      </div>
+      <div class="table-responsive"><table style="margin-top:10px"><thead><tr><th>Produto</th><th>Qtd</th><th>Preço</th><th>Total</th><th></th></tr></thead>
+        <tbody class="ib-list"></tbody></table></div>
+      <div style="text-align:right; font-weight:700; margin-top:6px">Total: <span class="ib-total">R$ 0,00</span></div>
+    `;
+
+    const productSelect = container.querySelector('.ib-product');
+    const unitSelect = container.querySelector('.ib-unit');
+    const priceInput = container.querySelector('.ib-price');
+
+    function refreshUnits() {
+      const product = PRODUCTS.find(p => p.id == productSelect.value);
+      if (!product) return;
+      const units = [product.base_unit, ...product.conversions.map(c => c.unit)];
+      unitSelect.innerHTML = units.map(u => `<option value="${u}">${u}</option>`).join('');
+      updateUnitPrice(productSelect, unitSelect, priceInput);
+    }
+    productSelect.addEventListener('change', refreshUnits);
+    unitSelect.addEventListener('change', () => updateUnitPrice(productSelect, unitSelect, priceInput));
+    if (PRODUCTS.length) refreshUnits();
+
+    container.querySelector('.ib-add').addEventListener('click', () => {
+      const product = PRODUCTS.find(p => p.id == productSelect.value);
+      if (!product) { showAlert('Cadastre um produto primeiro.'); return; }
+      const quantity = parseFloat(container.querySelector('.ib-qty').value);
+      const unit_price = parseFloat(priceInput.value);
+      if (!quantity || quantity <= 0) { showAlert('Quantidade inválida.'); return; }
+      if (isNaN(unit_price) || unit_price < 0) { showAlert('Preço inválido.'); return; }
+      items.push({ product_id: product.id, name: product.name, unit: unitSelect.value, quantity, unit_price });
+      renderList();
+    });
+
+    renderList();
+  }
+
+  function renderList() {
+    const tbody = container.querySelector('.ib-list');
+    tbody.innerHTML = items.map((it, idx) => `
+      <tr><td>${it.name}</td><td>${it.quantity} ${it.unit}</td><td>R$ ${Number(it.unit_price).toFixed(2)}</td>
+      <td>R$ ${(it.quantity * it.unit_price).toFixed(2)}</td>
+      <td><button type="button" class="danger ib-remove" data-idx="${idx}" style="padding:4px 8px">×</button></td></tr>
+    `).join('') || '<tr><td colspan="5" style="color:var(--muted)">Nenhum item ainda.</td></tr>';
+    const total = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+    container.querySelector('.ib-total').textContent = 'R$ ' + total.toFixed(2);
+    tbody.querySelectorAll('.ib-remove').forEach(btn => btn.addEventListener('click', () => {
+      items.splice(parseInt(btn.dataset.idx), 1); renderList();
+    }));
+  }
+
+  render();
+  const api = {
+    getItems: () => items.map(({ product_id, unit, quantity, unit_price }) => ({ product_id, unit, quantity, unit_price })),
+    reset: () => { items = []; render(); },
+    refreshProductOptions: () => render(),
+  };
+  container.refreshProductOptions = api.refreshProductOptions;
+  return api;
+}
+
+// ---------- orçamentos ----------
+
+const quoteBuilder = createItemBuilder('quote-items-builder');
+
+async function loadQuotes() {
+  const resp = await fetch('/api/quotes');
+  const data = await resp.json();
+  const tbody = document.querySelector('#quotes-table tbody');
+  tbody.innerHTML = data.quotes.map(q => {
+    let actions = '';
+    if (q.status === 'draft') actions += actionBtn(`sendQuote(${q.id})`, 'Enviar');
+    if (q.status === 'draft' || q.status === 'sent') {
+      actions += actionBtn(`approveQuote(${q.id})`, 'Aprovar');
+      actions += actionBtn(`rejectQuote(${q.id})`, 'Rejeitar', 'danger');
+    }
+    if (q.status === 'approved' && !q.has_order) actions += actionBtn(`convertQuote(${q.id})`, 'Converter em pedido', 'primary');
+    return `<tr><td>${q.id}</td><td>${q.customer_name}</td><td>R$ ${q.total}</td><td>${statusBadge('q', q.status)}</td><td>${actions}</td></tr>`;
+  }).join('') || '<tr><td colspan="5" style="color:var(--muted)">Nenhum orçamento ainda.</td></tr>';
+}
+
+document.getElementById('quote-create-btn').addEventListener('click', async () => {
+  const items = quoteBuilder.getItems();
+  const customer_name = document.getElementById('quote-customer').value.trim();
+  if (!customer_name) { showAlert('Informe o nome do cliente.'); return; }
+  if (!items.length) { showAlert('Adicione ao menos um item.'); return; }
+
+  const resp = await fetch('/api/quotes', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      customer_name,
+      customer_document: document.getElementById('quote-document').value.trim() || null,
+      customer_phone: document.getElementById('quote-phone').value.trim() || null,
+      items,
+    }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Orçamento criado.', true);
+  document.getElementById('quote-customer').value = '';
+  document.getElementById('quote-document').value = '';
+  document.getElementById('quote-phone').value = '';
+  quoteBuilder.reset();
+  loadQuotes();
+});
+
+async function sendQuote(id) {
+  const resp = await fetch(`/api/quotes/${id}/send`, { method: 'POST' });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  loadQuotes();
+}
+async function approveQuote(id) {
+  const resp = await fetch(`/api/quotes/${id}/approve`, { method: 'POST' });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  loadQuotes();
+}
+async function rejectQuote(id) {
+  const resp = await fetch(`/api/quotes/${id}/reject`, { method: 'POST' });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  loadQuotes();
+}
+async function convertQuote(id) {
+  const location_id = parseInt(document.getElementById('quote-convert-location').value);
+  if (!location_id) { showAlert('Cadastre um endereço de estoque primeiro.'); return; }
+  const resp = await fetch(`/api/quotes/${id}/convert`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ location_id }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Orçamento convertido em pedido #' + data.order_id + '.', true);
+  loadQuotes();
+  loadOrders();
+}
+
+// ---------- pedidos ----------
+
+const orderBuilder = createItemBuilder('order-items-builder');
+const ORDER_NEXT_LABEL = { reserved: 'Separar', separated: 'Confirmar retirada', picked_up: 'Marcar entregue' };
+
+async function loadOrders() {
+  const resp = await fetch('/api/orders');
+  const data = await resp.json();
+  window.ORDERS = data.orders;
+
+  const tbody = document.querySelector('#orders-table tbody');
+  tbody.innerHTML = data.orders.map(o => {
+    let actions = '';
+    const nextLabel = ORDER_NEXT_LABEL[o.status];
+    if (nextLabel && (o.status !== 'picked_up' || o.is_delivery)) {
+      actions += actionBtn(`advanceOrder(${o.id})`, nextLabel, 'primary');
+    }
+    if (o.status === 'reserved' || o.status === 'separated') {
+      actions += actionBtn(`cancelOrder(${o.id})`, 'Cancelar', 'danger');
+    }
+    return `<tr><td>${o.id}</td><td>${o.customer_name}</td><td>R$ ${o.total}</td><td>${statusBadge('o', o.status)}</td><td>${o.is_delivery ? 'Sim' : 'Não'}</td><td>${actions}</td></tr>`;
+  }).join('') || '<tr><td colspan="6" style="color:var(--muted)">Nenhum pedido ainda.</td></tr>';
+
+  const deliveryOrderSelect = document.getElementById('delivery-order');
+  if (deliveryOrderSelect) {
+    const eligible = data.orders.filter(o => o.is_delivery && !o.has_delivery && o.status !== 'cancelled');
+    deliveryOrderSelect.innerHTML = eligible.map(o => `<option value="${o.id}">#${o.id} - ${o.customer_name}</option>`).join('')
+      || '<option value="">Nenhum pedido de entrega pendente</option>';
+  }
+}
+
+document.getElementById('order-create-btn').addEventListener('click', async () => {
+  const items = orderBuilder.getItems();
+  const customer_name = document.getElementById('order-customer').value.trim();
+  const location_id = parseInt(document.getElementById('order-location').value);
+  if (!customer_name) { showAlert('Informe o nome do cliente.'); return; }
+  if (!location_id) { showAlert('Cadastre um endereço de estoque primeiro.'); return; }
+  if (!items.length) { showAlert('Adicione ao menos um item.'); return; }
+
+  const resp = await fetch('/api/orders', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      customer_name, location_id, items,
+      is_delivery: document.getElementById('order-is-delivery').checked,
+    }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Pedido #' + data.order.id + ' criado.', true);
+  document.getElementById('order-customer').value = '';
+  document.getElementById('order-is-delivery').checked = false;
+  orderBuilder.reset();
+  loadOrders();
+});
+
+async function advanceOrder(id) {
+  const resp = await fetch(`/api/orders/${id}/advance`, { method: 'POST' });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  loadOrders();
+}
+async function cancelOrder(id) {
+  const resp = await fetch(`/api/orders/${id}/cancel`, { method: 'POST' });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  loadOrders();
+}
+
+// ---------- compras ----------
+
+const poBuilder = createItemBuilder('po-items-builder');
+
+async function loadSuppliers() {
+  const resp = await fetch('/api/purchasing/suppliers');
+  const data = await resp.json();
+  window.SUPPLIERS = data.suppliers;
+  const select = document.getElementById('po-supplier');
+  select.innerHTML = data.suppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('')
+    || '<option value="">Cadastre um fornecedor</option>';
+}
+
+document.getElementById('supplier-create-btn').addEventListener('click', async () => {
+  const name = document.getElementById('supplier-name').value.trim();
+  if (!name) { showAlert('Informe o nome do fornecedor.'); return; }
+  const resp = await fetch('/api/purchasing/suppliers', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name,
+      document: document.getElementById('supplier-document').value.trim() || null,
+      phone: document.getElementById('supplier-phone').value.trim() || null,
+    }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Fornecedor criado.', true);
+  document.getElementById('supplier-name').value = '';
+  document.getElementById('supplier-document').value = '';
+  document.getElementById('supplier-phone').value = '';
+  loadSuppliers();
+  loadCarrierSelects();
+});
+
+async function loadPurchaseOrders() {
+  const resp = await fetch('/api/purchasing/orders');
+  const data = await resp.json();
+  window.PURCHASE_ORDERS = data.purchase_orders;
+  const tbody = document.querySelector('#po-table tbody');
+  tbody.innerHTML = data.purchase_orders.map(po => {
+    let actions = '';
+    if (po.status === 'sent' || po.status === 'partially_received') {
+      actions += actionBtn(`openReceivePanel(${po.id})`, 'Receber', 'primary');
+    }
+    return `<tr><td>${po.id}</td><td>${po.supplier_name || ''}</td><td>R$ ${po.total}</td><td>${statusBadge('po', po.status)}</td><td>${actions}</td></tr>`;
+  }).join('') || '<tr><td colspan="5" style="color:var(--muted)">Nenhum pedido de compra ainda.</td></tr>';
+}
+
+document.getElementById('po-create-btn').addEventListener('click', async () => {
+  const items = poBuilder.getItems();
+  const supplier_id = parseInt(document.getElementById('po-supplier').value);
+  if (!supplier_id) { showAlert('Cadastre um fornecedor primeiro.'); return; }
+  if (!items.length) { showAlert('Adicione ao menos um item.'); return; }
+
+  const resp = await fetch('/api/purchasing/orders', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ supplier_id, items }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Pedido de compra #' + data.purchase_order.id + ' criado.', true);
+  poBuilder.reset();
+  loadPurchaseOrders();
+});
+
+function openReceivePanel(poId) {
+  const po = window.PURCHASE_ORDERS.find(p => p.id === poId);
+  if (!po) return;
+  document.getElementById('po-receive-id').textContent = po.id;
+  document.getElementById('po-receive-panel').hidden = false;
+  document.getElementById('po-receive-panel').dataset.poId = poId;
+
+  const tbody = document.getElementById('po-receive-items');
+  tbody.innerHTML = po.items.map(item => {
+    const product = PRODUCTS.find(p => p.id === item.product_id);
+    const pending = (parseFloat(item.quantity) - parseFloat(item.quantity_received)).toFixed(4);
+    if (parseFloat(pending) <= 0) return '';
+    return `<tr data-po-item-id="${item.id}" data-pending="${pending}">
+      <td>${product ? product.name : item.product_id}</td>
+      <td>${pending} ${item.unit}</td>
+      <td><input type="number" step="0.01" class="receive-qty" max="${pending}" placeholder="0"></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('po-receive-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+document.getElementById('po-receive-cancel').addEventListener('click', () => {
+  document.getElementById('po-receive-panel').hidden = true;
+});
+
+document.getElementById('po-receive-confirm').addEventListener('click', async () => {
+  const panel = document.getElementById('po-receive-panel');
+  const poId = panel.dataset.poId;
+  const location_id = parseInt(document.getElementById('po-receive-location').value);
+  if (!location_id) { showAlert('Selecione o endereço de recebimento.'); return; }
+
+  const items = [];
+  panel.querySelectorAll('tr[data-po-item-id]').forEach(row => {
+    const qty = parseFloat(row.querySelector('.receive-qty').value);
+    if (qty && qty > 0) {
+      items.push({ purchase_order_item_id: parseInt(row.dataset.poItemId), quantity: qty });
+    }
+  });
+  if (!items.length) { showAlert('Informe a quantidade recebida de ao menos um item.'); return; }
+
+  const resp = await fetch(`/api/purchasing/orders/${poId}/receive`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ location_id, items }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Recebimento confirmado.', true);
+  panel.hidden = true;
+  loadPurchaseOrders();
+  loadProducts();
+  loadPayables();
+});
+
+// ---------- financeiro ----------
+
+async function loadPayables() {
+  const resp = await fetch('/api/finance/payables');
+  const data = await resp.json();
+  const tbody = document.querySelector('#payables-table tbody');
+  tbody.innerHTML = data.payables.map(p => {
+    let actions = '';
+    if (p.status !== 'paid') actions += actionBtn(`openSettlePanel(${p.id}, ${p.amount_open})`, 'Baixar', 'primary');
+    return `<tr><td>${p.supplier_name || ''}</td><td>${p.description || ''}</td><td>R$ ${p.amount}</td>
+      <td>R$ ${p.amount_paid}</td><td>R$ ${p.amount_open}</td><td>${p.due_date || ''}</td>
+      <td>${statusBadge('p', p.status)}</td><td>${actions}</td></tr>`;
+  }).join('') || '<tr><td colspan="8" style="color:var(--muted)">Nenhuma conta a pagar.</td></tr>';
+}
+
+function openSettlePanel(payableId, amountOpen) {
+  const amount = prompt(`Valor a baixar (aberto: R$ ${amountOpen}):`, amountOpen);
+  if (amount === null) return;
+  const method = prompt('Forma de pagamento (opcional):', 'pix') || null;
+  settlePayable(payableId, amount, method);
+}
+
+async function settlePayable(payableId, amount, method) {
+  const resp = await fetch(`/api/finance/payables/${payableId}/settle`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount, method }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Baixa registrada.', true);
+  loadPayables();
+}
+
+// ---------- entregas ----------
+
+async function loadCarrierSelects() {
+  const resp = await fetch('/api/logistics/carriers');
+  const data = await resp.json();
+  const options = data.carriers.map(c => `<option value="${c.id}">${c.name}</option>`).join('') || '<option value="">Cadastre uma transportadora</option>';
+  ['vehicle-carrier', 'driver-carrier'].forEach(id => document.getElementById(id).innerHTML = options);
+}
+
+async function loadVehiclesAndDrivers() {
+  const [vResp, dResp] = await Promise.all([fetch('/api/logistics/vehicles'), fetch('/api/logistics/drivers')]);
+  const vData = await vResp.json();
+  const dData = await dResp.json();
+  document.getElementById('delivery-vehicle').innerHTML =
+    '<option value="">Nenhum</option>' + vData.vehicles.map(v => `<option value="${v.id}">${v.plate}</option>`).join('');
+  document.getElementById('delivery-driver').innerHTML =
+    '<option value="">Nenhum</option>' + dData.drivers.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+}
+
+document.getElementById('carrier-create-btn').addEventListener('click', async () => {
+  const name = document.getElementById('carrier-name').value.trim();
+  if (!name) { showAlert('Informe o nome da transportadora.'); return; }
+  const resp = await fetch('/api/logistics/carriers', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Transportadora criada.', true);
+  document.getElementById('carrier-name').value = '';
+  loadCarrierSelects();
+});
+
+document.getElementById('vehicle-create-btn').addEventListener('click', async () => {
+  const carrier_id = parseInt(document.getElementById('vehicle-carrier').value);
+  const plate = document.getElementById('vehicle-plate').value.trim();
+  if (!carrier_id || !plate) { showAlert('Selecione a transportadora e informe a placa.'); return; }
+  const resp = await fetch('/api/logistics/vehicles', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ carrier_id, plate }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Veículo criado.', true);
+  document.getElementById('vehicle-plate').value = '';
+  loadVehiclesAndDrivers();
+});
+
+document.getElementById('driver-create-btn').addEventListener('click', async () => {
+  const carrier_id = parseInt(document.getElementById('driver-carrier').value);
+  const name = document.getElementById('driver-name').value.trim();
+  if (!carrier_id || !name) { showAlert('Selecione a transportadora e informe o nome.'); return; }
+  const resp = await fetch('/api/logistics/drivers', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ carrier_id, name }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Motorista criado.', true);
+  document.getElementById('driver-name').value = '';
+  loadVehiclesAndDrivers();
+});
+
+async function loadDeliveries() {
+  const resp = await fetch('/api/logistics/deliveries');
+  const data = await resp.json();
+  const DELIVERY_NEXT_LABEL = { scheduled: 'Iniciar rota', in_route: 'Confirmar entrega' };
+  const tbody = document.querySelector('#deliveries-table tbody');
+  tbody.innerHTML = data.deliveries.map(d => {
+    let actions = '';
+    const nextLabel = DELIVERY_NEXT_LABEL[d.status];
+    if (nextLabel) actions += actionBtn(`advanceDelivery(${d.id})`, nextLabel, 'primary');
+    if (d.status !== 'completed' && d.status !== 'failed') {
+      actions += actionBtn(`addOccurrence(${d.id})`, 'Registrar ocorrência');
+    }
+    return `<tr><td>${d.id}</td><td>${d.customer_name || ''}</td><td>${d.address || ''}</td><td>${statusBadge('d', d.status)}</td><td>${actions}</td></tr>`;
+  }).join('') || '<tr><td colspan="5" style="color:var(--muted)">Nenhuma entrega ainda.</td></tr>';
+}
+
+document.getElementById('delivery-create-btn').addEventListener('click', async () => {
+  const order_id = parseInt(document.getElementById('delivery-order').value);
+  const address = document.getElementById('delivery-address').value.trim();
+  if (!order_id) { showAlert('Selecione um pedido de entrega pendente.'); return; }
+  if (!address) { showAlert('Informe o endereço de entrega.'); return; }
+
+  const vehicle_id = document.getElementById('delivery-vehicle').value || null;
+  const driver_id = document.getElementById('delivery-driver').value || null;
+
+  const resp = await fetch('/api/logistics/deliveries', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ order_id, address, vehicle_id, driver_id }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Entrega agendada.', true);
+  document.getElementById('delivery-address').value = '';
+  loadDeliveries();
+  loadOrders();
+});
+
+async function advanceDelivery(id) {
+  const resp = await fetch(`/api/logistics/deliveries/${id}/advance`, { method: 'POST' });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  loadDeliveries();
+  loadOrders();
+}
+
+function addOccurrence(deliveryId) {
+  const kind = prompt('Tipo de ocorrência (atraso, avaria, recusa, outro):', 'atraso');
+  if (!kind) return;
+  const description = prompt('Descrição:', '') || null;
+  fetch(`/api/logistics/deliveries/${deliveryId}/occurrences`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kind, description }),
+  }).then(r => r.json()).then(data => {
+    if (data.error) { showAlert(data.error); return; }
+    showAlert('Ocorrência registrada.', true);
+    loadDeliveries();
+  });
+}
+
+// ---------- init ----------
+
 loadProducts();
 loadLocations();
+loadQuotes();
+loadOrders();
+loadSuppliers();
+loadPurchaseOrders();
+loadPayables();
+loadCarrierSelects();
+loadVehiclesAndDrivers();
+loadDeliveries();
 </script>
 </body>
 </html>

@@ -110,6 +110,21 @@ def release_reservation(company_id, product, location_id, quantity: Decimal, lot
     return balance
 
 
+def fulfill_reservation(company_id, product, location_id, quantity: Decimal, lot_id=None,
+                         reference_type=None, reference_id=None, user_id=None):
+    """Confirma a retirada de um item reservado: baixa do saldo físico e da
+    reserva ao mesmo tempo (usado quando um pedido é efetivamente retirado)."""
+    quantity = Decimal(str(quantity))
+    balance = _get_or_create_balance(company_id, product.id, location_id, lot_id)
+    balance.quantity -= quantity
+    balance.reserved = max(Decimal(0), balance.reserved - quantity)
+    _record_movement(
+        company_id, product, location_id, lot_id, MOVEMENT_OUT, quantity,
+        reference_type, reference_id, None, user_id,
+    )
+    return balance
+
+
 def adjust_stock(company_id, product, location_id, new_quantity: Decimal, lot_id=None,
                   note=None, user_id=None):
     """Ajuste manual de inventário: define o saldo físico para new_quantity,

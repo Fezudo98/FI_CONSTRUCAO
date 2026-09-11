@@ -138,6 +138,7 @@ class Order(db.Model, TimestampMixin):
     company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     quote_id = db.Column(db.Integer, db.ForeignKey("quotes.id"), unique=True, nullable=True)
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    location_id = db.Column(db.Integer, db.ForeignKey("stock_locations.id"), nullable=False)
 
     customer_name = db.Column(db.String(150), nullable=False)
     status = db.Column(db.String(15), nullable=False, default=ORDER_RESERVED)

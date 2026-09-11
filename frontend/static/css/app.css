@@ -18,6 +18,7 @@ body {
   font-family: 'Segoe UI', system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
+  overflow-x: hidden;
 }
 
 .topbar {
@@ -62,6 +63,7 @@ main { max-width: 1200px; margin: 0 auto; padding: 20px; }
 h1 { font-size: 1.4rem; margin: 0 0 4px; color: var(--brand-primary-dark); }
 h2 { font-size: .95rem; margin: 0 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 
+.table-responsive { width: 100%; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .9rem; }
 th { text-align: left; color: var(--muted); font-size: .75rem; text-transform: uppercase; padding: 8px; border-bottom: 2px solid var(--border); }
 td { padding: 10px 8px; border-bottom: 1px solid var(--border); }

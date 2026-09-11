@@ -12,22 +12,37 @@ apenas com um navegador.
 
 ## Estado atual da implementação
 
-✅ **Pronto e testado** (12 testes automatizados, fluxo validado no navegador):
+✅ **Pronto e testado** (20 testes automatizados, todos os fluxos validados no
+navegador de ponta a ponta):
 - Autenticação (login/logout por sessão), papéis e permissões.
 - Catálogo de produtos com conversão de unidades (ex.: 1 pallet = 40 unidades).
 - Estoque por endereço/lote, saldo disponível vs. reservado, ajustes manuais.
 - PDV completo: abertura/fechamento de caixa, venda com múltiplos itens e
   unidades, baixa automática de estoque, validação de pagamento.
-- Modelo de dados completo para todos os domínios abaixo (schema + migrações).
+- Orçamentos: criação, envio, aprovação/rejeição, conversão em pedido
+  (reservando estoque automaticamente).
+- Pedidos: criação direta ou via orçamento, fluxo reservado → separado →
+  retirado → (entregue, se for entrega), cancelamento com liberação de reserva.
+- Compras: fornecedores, pedidos de compra, recebimento parcial ou total —
+  atualiza custo médio ponderado do produto, dá entrada no estoque e gera
+  conta a pagar automaticamente.
+- Financeiro: contas a pagar com baixa total ou parcial.
+- Logística: transportadoras, veículos, motoristas, agendamento de entrega,
+  fluxo agendado → em rota → concluída (marca o pedido como entregue
+  automaticamente), registro de ocorrências.
+- Modelo de dados completo para multiempresa/filial e permissões por papel.
 
-🚧 **Modelado no banco, interface ainda não construída** (próximas fases):
-- Orçamentos e pedidos (aprovação, conversão, acompanhamento de status).
-- Compras: cotações, pedidos de compra, recebimento parcial.
-- Financeiro: contas a pagar e baixas.
-- Logística: transportadoras, veículos, entregas e ocorrências.
+🚧 **Pendente** (fora do escopo desta entrega):
 - Endpoint de licenciamento na VPS (o script `check_license.py` já existe e
   funciona, mas hoje não bloqueia nada porque o endpoint ainda não foi criado
   no lado do servidor — ver seção "Licenciamento" abaixo).
+- Cotações formais de compra com múltiplos fornecedores (`SupplierOffer`) —
+  modelo de dados já existe, mas o pedido de compra hoje é criado direto com
+  um fornecedor já escolhido.
+- Algumas ações administrativas de baixa frequência (baixar conta a pagar,
+  registrar ocorrência de entrega) usam caixas de diálogo nativas do
+  navegador (`prompt()`) em vez de formulário embutido na página — funcional,
+  mas menos refinado visualmente que o resto da interface.
 
 ## Instalação no computador do depósito (PC-servidor)
 
@@ -108,7 +123,8 @@ app/routes/web.py      serve as páginas do frontend
 frontend/index.html    painel executivo (módulos)
 frontend/login.html    tela de login
 frontend/pdv.html      frente de caixa
-frontend/operacao.html retaguarda (estoque pronto; demais módulos em breve)
+frontend/operacao.html retaguarda: estoque, orçamentos, pedidos, compras,
+                        financeiro e entregas
 migrations/            evolução versionada do banco (Alembic)
 scripts/                bootstrap_database.py, check_license.py
 iniciar_sistema.bat    inicialização de produção (update + licença + start)
