@@ -104,8 +104,8 @@
           </div>
         </div>
 
-        <div class="card">
-          <h2>Carrinho</h2>
+        <div class="card pdv-cart" id="pdv-cart-panel" aria-labelledby="cart-title">
+          <div class="panel-head"><h2 id="cart-title">Carrinho</h2><button type="button" class="secondary cart-close" id="cart-close-btn">Continuar venda</button></div>
           <div id="cart-items"><p style="color:var(--muted); font-size:.85rem">Nenhum item ainda.</p></div>
           <div class="cart-total">
             <span>Total</span>
@@ -144,6 +144,8 @@
       </div>
     </div>
   </main>
+  <button type="button" class="primary mobile-cart-trigger" id="mobile-cart-trigger" aria-controls="pdv-cart-panel" aria-expanded="false"><span>Carrinho</span><strong id="mobile-cart-count">0 itens</strong><strong id="mobile-cart-total">R$ 0,00</strong></button>
+  <div class="cart-scrim" id="cart-scrim" hidden></div>
 
   <!-- Recibo -->
   <div id="receipt-overlay" hidden>
@@ -297,6 +299,7 @@ function closeAddItemForm() {
   selectedProduct = null;
   document.getElementById('add-item-form').hidden = true;
   document.getElementById('search-input').value = '';
+  document.getElementById('search-input').focus();
 }
 
 document.getElementById('add-item-cancel').addEventListener('click', closeAddItemForm);
@@ -341,7 +344,22 @@ function renderCart() {
   }
   const total = cart.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
   document.getElementById('cart-total-value').textContent = fmtMoney(total);
+  document.getElementById('mobile-cart-count').textContent = cart.length === 1 ? '1 item' : cart.length + ' itens';
+  document.getElementById('mobile-cart-total').textContent = fmtMoney(total);
 }
+
+function setMobileCart(open) {
+  document.body.classList.toggle('cart-open', open);
+  document.getElementById('cart-scrim').hidden = !open;
+  document.getElementById('mobile-cart-trigger').setAttribute('aria-expanded', String(open));
+  if (open) document.getElementById('customer-name').focus();
+  else document.getElementById('search-input').focus();
+}
+
+document.getElementById('mobile-cart-trigger').addEventListener('click', () => setMobileCart(true));
+document.getElementById('cart-close-btn').addEventListener('click', () => setMobileCart(false));
+document.getElementById('cart-scrim').addEventListener('click', () => setMobileCart(false));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('cart-open')) setMobileCart(false); });
 
 let customerSearchTimeout;
 document.getElementById('customer-name').addEventListener('input', (e) => {
@@ -432,6 +450,8 @@ async function showReceipt(saleId) {
 
 document.getElementById('receipt-close-btn').addEventListener('click', () => {
   document.getElementById('receipt-overlay').hidden = true;
+  setMobileCart(false);
+  document.getElementById('search-input').focus();
 });
 document.getElementById('print-thermal-btn').addEventListener('click', () => {
   document.getElementById('receipt-content').classList.add('thermal');
