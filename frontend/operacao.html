@@ -314,6 +314,30 @@
         </table></div>
       </div>
     </div>
+
+    <div class="dialog-overlay" id="settle-dialog" role="dialog" aria-modal="true" aria-labelledby="settle-title" hidden>
+      <form class="dialog-card" id="settle-form">
+        <div class="panel-head"><div><h2 id="settle-title">Registrar baixa</h2><p class="muted" id="settle-context"></p></div><button type="button" class="secondary dialog-close" data-dialog="settle-dialog" aria-label="Fechar">Fechar</button></div>
+        <input type="hidden" id="settle-payable-id">
+        <div class="grid grid-2">
+          <div><label for="settle-amount">Valor da baixa (R$)</label><input type="number" id="settle-amount" min="0.01" step="0.01" required></div>
+          <div><label for="settle-method">Forma de pagamento</label><select id="settle-method"><option value="pix">Pix</option><option value="dinheiro">Dinheiro</option><option value="boleto">Boleto</option><option value="transferencia">Transferência</option><option value="cartao">Cartão</option><option value="">Não informada</option></select></div>
+        </div>
+        <div class="alert err" id="settle-error" role="alert" hidden></div>
+        <div class="button-row"><button type="submit" class="primary">Registrar baixa</button><button type="button" class="secondary dialog-close" data-dialog="settle-dialog">Cancelar</button></div>
+      </form>
+    </div>
+
+    <div class="dialog-overlay" id="occurrence-dialog" role="dialog" aria-modal="true" aria-labelledby="occurrence-title" hidden>
+      <form class="dialog-card" id="occurrence-form">
+        <div class="panel-head"><div><h2 id="occurrence-title">Registrar ocorrência</h2><p class="muted">Descreva o que aconteceu durante a entrega.</p></div><button type="button" class="secondary dialog-close" data-dialog="occurrence-dialog" aria-label="Fechar">Fechar</button></div>
+        <input type="hidden" id="occurrence-delivery-id">
+        <div class="field"><label for="occurrence-kind">Tipo</label><select id="occurrence-kind" required><option value="atraso">Atraso</option><option value="avaria">Avaria</option><option value="recusa">Recusa</option><option value="outro">Outro</option></select></div>
+        <div class="field"><label for="occurrence-description">Descrição</label><textarea id="occurrence-description" rows="4" placeholder="Informe os detalhes para consulta futura"></textarea></div>
+        <div class="alert err" id="occurrence-error" role="alert" hidden></div>
+        <div class="button-row"><button type="submit" class="primary">Registrar ocorrência</button><button type="button" class="secondary dialog-close" data-dialog="occurrence-dialog">Cancelar</button></div>
+      </form>
+    </div>
   </main>
 
 <script src="/static/js/ui.js"></script>
@@ -909,21 +933,31 @@ async function loadPayables() {
 }
 
 function openSettlePanel(payableId, amountOpen) {
-  const amount = prompt(`Valor a baixar (aberto: R$ ${amountOpen}):`, amountOpen);
-  if (amount === null) return;
-  const method = prompt('Forma de pagamento (opcional):', 'pix') || null;
-  settlePayable(payableId, amount, method);
+  document.getElementById('settle-payable-id').value = payableId;
+  document.getElementById('settle-amount').value = amountOpen;
+  document.getElementById('settle-amount').max = amountOpen;
+  document.getElementById('settle-context').textContent = `Saldo em aberto: R$ ${amountOpen}`;
+  openDialog('settle-dialog', 'settle-amount');
 }
 
 async function settlePayable(payableId, amount, method) {
-  const resp = await fetch(`/api/finance/payables/${payableId}/settle`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount, method }),
-  });
-  const data = await resp.json();
-  if (!resp.ok) { showAlert(data.error); return; }
-  showAlert('Baixa registrada.', true);
-  loadPayables();
+  const error = document.getElementById('settle-error');
+  try {
+    const resp = await fetch(`/api/finance/payables/${payableId}/settle`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, method }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { error.textContent = data.error || 'Não foi possível registrar a baixa.'; error.hidden = false; return false; }
+    showAlert('Baixa registrada.', true);
+    closeDialog('settle-dialog');
+    loadPayables();
+    return true;
+  } catch (_) {
+    error.textContent = 'Servidor indisponível. Tente novamente.';
+    error.hidden = false;
+    return false;
+  }
 }
 
 // ---------- entregas ----------
@@ -1032,18 +1066,74 @@ async function advanceDelivery(id) {
 }
 
 function addOccurrence(deliveryId) {
-  const kind = prompt('Tipo de ocorrência (atraso, avaria, recusa, outro):', 'atraso');
-  if (!kind) return;
-  const description = prompt('Descrição:', '') || null;
-  fetch(`/api/logistics/deliveries/${deliveryId}/occurrences`, {
+  document.getElementById('occurrence-delivery-id').value = deliveryId;
+  document.getElementById('occurrence-kind').value = 'atraso';
+  document.getElementById('occurrence-description').value = '';
+  openDialog('occurrence-dialog', 'occurrence-kind');
+}
+
+let dialogTrigger = null;
+function openDialog(id, focusId) {
+  dialogTrigger = document.activeElement;
+  const dialog = document.getElementById(id);
+  dialog.hidden = false;
+  document.body.classList.add('dialog-open');
+  requestAnimationFrame(() => document.getElementById(focusId).focus());
+}
+
+function closeDialog(id) {
+  document.getElementById(id).hidden = true;
+  document.body.classList.remove('dialog-open');
+  if (dialogTrigger) dialogTrigger.focus();
+}
+
+document.querySelectorAll('.dialog-close').forEach(btn => btn.addEventListener('click', () => closeDialog(btn.dataset.dialog)));
+document.querySelectorAll('.dialog-overlay').forEach(dialog => dialog.addEventListener('click', e => {
+  if (e.target === dialog) closeDialog(dialog.id);
+}));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.dialog-overlay:not([hidden])').forEach(dialog => closeDialog(dialog.id));
+});
+
+document.getElementById('settle-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const button = e.currentTarget.querySelector('[type="submit"]');
+  const error = document.getElementById('settle-error');
+  const amount = document.getElementById('settle-amount').value;
+  const max = Number(document.getElementById('settle-amount').max);
+  error.hidden = true;
+  if (Number(amount) <= 0 || Number(amount) > max) {
+    error.textContent = `Informe um valor entre R$ 0,01 e R$ ${max}.`;
+    error.hidden = false;
+    return;
+  }
+  button.disabled = true;
+  try {
+    await settlePayable(Number(document.getElementById('settle-payable-id').value), amount, document.getElementById('settle-method').value || null);
+  } finally { button.disabled = false; }
+});
+
+document.getElementById('occurrence-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const button = e.currentTarget.querySelector('[type="submit"]');
+  const deliveryId = Number(document.getElementById('occurrence-delivery-id').value);
+  const kind = document.getElementById('occurrence-kind').value;
+  const description = document.getElementById('occurrence-description').value.trim() || null;
+  const error = document.getElementById('occurrence-error');
+  error.hidden = true;
+  button.disabled = true;
+  try {
+    const response = await fetch(`/api/logistics/deliveries/${deliveryId}/occurrences`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ kind, description }),
-  }).then(r => r.json()).then(data => {
-    if (data.error) { showAlert(data.error); return; }
+    });
+    const data = await response.json();
+    if (!response.ok) { error.textContent = data.error || 'Não foi possível registrar a ocorrência.'; error.hidden = false; return; }
     showAlert('Ocorrência registrada.', true);
+    closeDialog('occurrence-dialog');
     loadDeliveries();
-  });
-}
+  } finally { button.disabled = false; }
+});
 
 // ---------- clientes ----------
 
