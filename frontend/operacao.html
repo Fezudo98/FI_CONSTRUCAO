@@ -25,10 +25,10 @@
   </div>
 
   <main>
-    <header class="page-head"><div class="page-head-copy"><h1>Operação</h1><p>Estoque, atendimento, compras, financeiro e entregas em um só lugar.</p></div></header>
+    <header class="page-head"><div class="page-head-copy"><h1 id="operation-title">Estoque</h1><p id="operation-description">Produtos, endereços e saldos disponíveis.</p></div><div class="page-actions" id="operation-actions"></div></header>
     <div id="alert" class="alert err" hidden></div>
 
-    <div class="tabs">
+    <div class="tabs" role="tablist" aria-label="Áreas da operação">
       <button data-tab="estoque" class="active">Estoque</button>
       <button data-tab="clientes">Clientes</button>
       <button data-tab="orcamentos">Orçamentos</button>
@@ -41,7 +41,7 @@
 
     <!-- ESTOQUE -->
     <div class="section active" id="section-estoque">
-      <div class="card">
+      <div class="card form-panel" id="form-location" data-form-panel>
         <h2>Novo endereço de estoque</h2>
         <div class="grid grid-2">
           <div>
@@ -56,7 +56,7 @@
         <button class="primary" id="create-loc-btn" style="margin-top:12px">Criar endereço</button>
       </div>
 
-      <div class="card">
+      <div class="card form-panel" id="form-product" data-form-panel>
         <h2>Novo produto</h2>
         <div class="grid grid-3">
           <div><label>SKU</label><input type="text" id="prod-sku"></div>
@@ -71,7 +71,7 @@
         <button class="primary" id="create-prod-btn" style="margin-top:12px">Criar produto</button>
       </div>
 
-      <div class="card">
+      <div class="card form-panel" id="form-adjustment" data-form-panel>
         <h2>Ajuste de saldo</h2>
         <div class="grid grid-2" style="margin-bottom:14px; padding-bottom:14px; border-bottom:1px dashed var(--border)">
           <div>
@@ -107,7 +107,7 @@
 
     <!-- CLIENTES -->
     <div class="section" id="section-clientes">
-      <div class="card">
+      <div class="card form-panel" id="form-customer" data-form-panel>
         <h2>Novo cliente</h2>
         <div class="grid grid-3">
           <div><label>Nome</label><input type="text" id="cust-name"></div>
@@ -135,7 +135,7 @@
 
     <!-- ORCAMENTOS -->
     <div class="section" id="section-orcamentos">
-      <div class="card">
+      <div class="card form-panel" id="form-quote" data-form-panel>
         <h2>Novo orçamento</h2>
         <div class="grid grid-3">
           <div><label>Cliente</label><input type="text" id="quote-customer"><div id="quote-customer-results" class="autocomplete-results"></div></div>
@@ -163,7 +163,7 @@
 
     <!-- PEDIDOS -->
     <div class="section" id="section-pedidos">
-      <div class="card">
+      <div class="card form-panel" id="form-order" data-form-panel>
         <h2>Novo pedido direto</h2>
         <div class="grid grid-3">
           <div><label>Cliente</label><input type="text" id="order-customer"><div id="order-customer-results" class="autocomplete-results"></div></div>
@@ -192,7 +192,7 @@
 
     <!-- COMPRAS -->
     <div class="section" id="section-compras">
-      <div class="card">
+      <div class="card form-panel" id="form-supplier" data-form-panel>
         <h2>Novo fornecedor</h2>
         <div class="grid grid-3">
           <div><label>Nome</label><input type="text" id="supplier-name"></div>
@@ -202,7 +202,7 @@
         <button class="primary" id="supplier-create-btn" style="margin-top:12px">Criar fornecedor</button>
       </div>
 
-      <div class="card">
+      <div class="card form-panel" id="form-purchase" data-form-panel>
         <h2>Novo pedido de compra</h2>
         <div class="grid grid-2">
           <div>
@@ -251,7 +251,7 @@
 
     <!-- ENTREGAS -->
     <div class="section" id="section-entregas">
-      <div class="card">
+      <div class="card form-panel" id="form-logistics-resources" data-form-panel>
         <h2>Transportadora / veículo / motorista</h2>
         <div class="grid grid-3">
           <div>
@@ -274,7 +274,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card form-panel" id="form-delivery" data-form-panel>
         <h2>Agendar entrega de um pedido</h2>
         <div class="grid grid-2">
           <div>
@@ -356,21 +356,65 @@ const TAB_RELOAD = {
   clientes: () => loadCustomers(),
 };
 
-document.querySelectorAll('.tabs button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('section-' + btn.dataset.tab).classList.add('active');
-    if (TAB_RELOAD[btn.dataset.tab]) TAB_RELOAD[btn.dataset.tab]();
-  });
-});
+const MODULE_META = {
+  estoque: { title: 'Estoque', description: 'Produtos, endereços e saldos disponíveis.', actions: [['Novo produto', 'form-product'], ['Ajustar saldo', 'form-adjustment'], ['Novo endereço', 'form-location']] },
+  clientes: { title: 'Clientes', description: 'Cadastro e consulta rápida para vendas e pedidos.', actions: [['Novo cliente', 'form-customer']] },
+  orcamentos: { title: 'Orçamentos', description: 'Propostas comerciais prontas para aprovação e conversão.', actions: [['Novo orçamento', 'form-quote']] },
+  pedidos: { title: 'Pedidos', description: 'Reserva, separação, retirada e entrega.', actions: [['Novo pedido', 'form-order']] },
+  compras: { title: 'Compras', description: 'Fornecedores, pedidos de compra e recebimentos.', actions: [['Novo pedido de compra', 'form-purchase'], ['Novo fornecedor', 'form-supplier']] },
+  financeiro: { title: 'Financeiro', description: 'Contas a pagar e baixas de pagamento.', actions: [] },
+  entregas: { title: 'Entregas', description: 'Recursos, agendamentos e acompanhamento da rota.', actions: [['Agendar entrega', 'form-delivery'], ['Recursos logísticos', 'form-logistics-resources']] },
+  auditoria: { title: 'Auditoria', description: 'Histórico das ações sensíveis realizadas no sistema.', actions: [] },
+};
 
-const hash = window.location.hash.replace('#', '');
-if (hash) {
-  const btn = document.querySelector(`.tabs button[data-tab="${hash}"]`);
-  if (btn) btn.click();
+document.querySelectorAll('[data-form-panel]').forEach(panel => panel.hidden = true);
+
+function renderModuleActions(meta) {
+  const container = document.getElementById('operation-actions');
+  container.replaceChildren();
+  meta.actions.forEach(([label, targetId], index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = index === 0 ? 'primary' : 'secondary';
+    button.textContent = label;
+    button.addEventListener('click', () => {
+      const panel = document.getElementById(targetId);
+      const willOpen = panel.hidden;
+      document.querySelectorAll('#' + panel.closest('.section').id + ' [data-form-panel]').forEach(item => item.hidden = true);
+      panel.hidden = !willOpen;
+      if (willOpen) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const field = panel.querySelector('input:not([type="hidden"]), select, textarea');
+        if (field) setTimeout(() => field.focus(), 250);
+      }
+    });
+    container.appendChild(button);
+  });
 }
+
+function activateTab(name, updateHash) {
+  const btn = document.querySelector(`.tabs button[data-tab="${name}"]`);
+  const section = document.getElementById('section-' + name);
+  if (!btn || !section) return;
+  document.querySelectorAll('.tabs button').forEach(b => {
+    b.classList.toggle('active', b === btn);
+    b.setAttribute('aria-selected', String(b === btn));
+  });
+  document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s === section));
+  const meta = MODULE_META[name];
+  document.getElementById('operation-title').textContent = meta.title;
+  document.getElementById('operation-description').textContent = meta.description;
+  renderModuleActions(meta);
+  if (updateHash && window.location.hash !== '#' + name) history.pushState({ tab: name }, '', '#' + name);
+  if (TAB_RELOAD[name]) TAB_RELOAD[name]();
+}
+
+document.querySelectorAll('.tabs button').forEach(btn => {
+  btn.setAttribute('role', 'tab');
+  btn.addEventListener('click', () => activateTab(btn.dataset.tab, true));
+});
+window.addEventListener('popstate', () => activateTab(window.location.hash.slice(1) || 'estoque', false));
+activateTab(window.location.hash.slice(1) || 'estoque', false);
 
 let PRODUCTS = [];
 let LOCATIONS = [];
