@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrar — F.I Construção</title>
+<link rel="stylesheet" href="/static/css/app.css">
+<style>
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(160deg, #08299B, #051D70); }
+  .login-card { width: 100%; max-width: 380px; background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+  .login-card img { display: block; margin: 0 auto 18px; height: 84px; }
+  .login-card h1 { text-align: center; font-size: 1.2rem; margin-bottom: 24px; }
+  .field { margin-bottom: 16px; }
+</style>
+</head>
+<body>
+  <div class="login-card">
+    <img src="/static/img/logo.jpg" alt="F.I Construção">
+    <h1>Acesso ao sistema</h1>
+    <div id="alert" class="alert err" hidden></div>
+    <form id="login-form">
+      <div class="field">
+        <label>E-mail</label>
+        <input type="email" id="email" required autofocus autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Senha</label>
+        <input type="password" id="password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="primary" style="width:100%">Entrar</button>
+    </form>
+  </div>
+
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const alertBox = document.getElementById('alert');
+  alertBox.hidden = true;
+
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  try {
+    const resp = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      alertBox.textContent = data.error || 'Não foi possível entrar.';
+      alertBox.hidden = false;
+      return;
+    }
+    window.location.href = '/index.html';
+  } catch (err) {
+    alertBox.textContent = 'Erro de conexão com o servidor.';
+    alertBox.hidden = false;
+  }
+});
+</script>
+</body>
+</html>

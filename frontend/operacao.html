@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operação — F.I Construção</title>
+<link rel="stylesheet" href="/static/css/app.css">
+<style>
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tabs button { background: #EDF0FA; color: var(--brand-primary-dark); padding: 8px 16px; }
+  .tabs button.active { background: var(--brand-primary); color: #fff; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .soon { text-align: center; padding: 40px 20px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><img src="/static/img/logo.jpg" alt="F.I Construção"> F.I Construção</div>
+    <nav>
+      <a href="/index.html">Painel</a>
+      <a href="/pdv.html">PDV</a>
+      <a href="/operacao.html" class="active">Operação</a>
+    </nav>
+    <div class="user">
+      <span id="current-user-name"></span>
+      <button class="logout" id="logout-btn">Sair</button>
+    </div>
+  </div>
+
+  <main>
+    <div id="alert" class="alert err" hidden></div>
+
+    <div class="tabs">
+      <button data-tab="estoque" class="active">Estoque</button>
+      <button data-tab="orcamentos">Orçamentos</button>
+      <button data-tab="pedidos">Pedidos</button>
+      <button data-tab="compras">Compras</button>
+      <button data-tab="financeiro">Financeiro</button>
+      <button data-tab="entregas">Entregas</button>
+    </div>
+
+    <!-- ESTOQUE -->
+    <div class="section active" id="section-estoque">
+      <div class="card">
+        <h2>Novo endereço de estoque</h2>
+        <div class="grid grid-2">
+          <div>
+            <label>Código</label>
+            <input type="text" id="loc-code" placeholder="A1">
+          </div>
+          <div>
+            <label>Descrição</label>
+            <input type="text" id="loc-desc" placeholder="Galpão A - Rua 1">
+          </div>
+        </div>
+        <button class="primary" id="create-loc-btn" style="margin-top:12px">Criar endereço</button>
+      </div>
+
+      <div class="card">
+        <h2>Novo produto</h2>
+        <div class="grid grid-3">
+          <div><label>SKU</label><input type="text" id="prod-sku"></div>
+          <div><label>Nome</label><input type="text" id="prod-name"></div>
+          <div><label>Unidade base</label><input type="text" id="prod-unit" placeholder="UN, KG, M..."></div>
+          <div><label>Preço de custo</label><input type="number" step="0.01" id="prod-cost"></div>
+          <div><label>Preço de venda</label><input type="number" step="0.01" id="prod-price"></div>
+          <div><label>Estoque mínimo</label><input type="number" step="0.01" id="prod-min" value="0"></div>
+        </div>
+        <button class="primary" id="create-prod-btn" style="margin-top:12px">Criar produto</button>
+      </div>
+
+      <div class="card">
+        <h2>Ajuste de saldo</h2>
+        <div class="grid grid-3">
+          <div>
+            <label>Produto</label>
+            <select id="adjust-product"></select>
+          </div>
+          <div>
+            <label>Endereço</label>
+            <select id="adjust-location"></select>
+          </div>
+          <div>
+            <label>Novo saldo físico</label>
+            <input type="number" step="0.01" id="adjust-qty">
+          </div>
+        </div>
+        <button class="primary" id="adjust-btn" style="margin-top:12px">Aplicar ajuste</button>
+      </div>
+
+      <div class="card">
+        <h2>Produtos cadastrados</h2>
+        <table id="products-table">
+          <thead><tr><th>SKU</th><th>Nome</th><th>Unidade</th><th>Custo</th><th>Venda</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" id="section-orcamentos"><div class="soon">📋 Módulo de orçamentos — próxima fase de implementação.</div></div>
+    <div class="section" id="section-pedidos"><div class="soon">🚚 Módulo de pedidos — próxima fase de implementação.</div></div>
+    <div class="section" id="section-compras"><div class="soon">🏭 Módulo de compras — próxima fase de implementação.</div></div>
+    <div class="section" id="section-financeiro"><div class="soon">💰 Módulo financeiro — próxima fase de implementação.</div></div>
+    <div class="section" id="section-entregas"><div class="soon">🛻 Módulo de entregas — próxima fase de implementação.</div></div>
+  </main>
+
+<script src="/static/js/auth.js"></script>
+<script>
+function showAlert(msg, ok) {
+  const el = document.getElementById('alert');
+  el.className = ok ? 'alert ok' : 'alert err';
+  el.textContent = msg;
+  el.hidden = false;
+  setTimeout(() => { el.hidden = true; }, 5000);
+}
+
+document.querySelectorAll('.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('section-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+const hash = window.location.hash.replace('#', '');
+if (hash) {
+  const btn = document.querySelector(`.tabs button[data-tab="${hash}"]`);
+  if (btn) btn.click();
+}
+
+async function loadProducts() {
+  const resp = await fetch('/api/products');
+  const data = await resp.json();
+  const tbody = document.querySelector('#products-table tbody');
+  tbody.innerHTML = data.products.map(p => `
+    <tr><td>${p.sku}</td><td>${p.name}</td><td>${p.base_unit}</td><td>R$ ${p.cost_price}</td><td>R$ ${p.sale_price}</td></tr>
+  `).join('');
+
+  const select = document.getElementById('adjust-product');
+  select.innerHTML = data.products.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('');
+}
+
+async function loadLocations() {
+  const resp = await fetch('/api/inventory/locations');
+  const data = await resp.json();
+  const select = document.getElementById('adjust-location');
+  select.innerHTML = data.locations.map(l => `<option value="${l.id}">${l.code} - ${l.description || ''}</option>`).join('');
+}
+
+document.getElementById('create-loc-btn').addEventListener('click', async () => {
+  const code = document.getElementById('loc-code').value.trim();
+  const description = document.getElementById('loc-desc').value.trim();
+  if (!code) { showAlert('Informe o código do endereço.'); return; }
+
+  const resp = await fetch('/api/inventory/locations', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, description }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Endereço criado.', true);
+  document.getElementById('loc-code').value = '';
+  document.getElementById('loc-desc').value = '';
+  loadLocations();
+});
+
+document.getElementById('create-prod-btn').addEventListener('click', async () => {
+  const payload = {
+    sku: document.getElementById('prod-sku').value.trim(),
+    name: document.getElementById('prod-name').value.trim(),
+    base_unit: document.getElementById('prod-unit').value.trim().toUpperCase(),
+    cost_price: document.getElementById('prod-cost').value || 0,
+    sale_price: document.getElementById('prod-price').value || 0,
+    min_stock: document.getElementById('prod-min').value || 0,
+  };
+  if (!payload.sku || !payload.name || !payload.base_unit) {
+    showAlert('Preencha SKU, nome e unidade base.');
+    return;
+  }
+
+  const resp = await fetch('/api/products', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Produto criado.', true);
+  ['prod-sku', 'prod-name', 'prod-unit', 'prod-cost', 'prod-price'].forEach(id => document.getElementById(id).value = '');
+  loadProducts();
+});
+
+document.getElementById('adjust-btn').addEventListener('click', async () => {
+  const product_id = parseInt(document.getElementById('adjust-product').value);
+  const location_id = parseInt(document.getElementById('adjust-location').value);
+  const new_quantity = document.getElementById('adjust-qty').value;
+  if (!product_id || !location_id || new_quantity === '') { showAlert('Preencha todos os campos.'); return; }
+
+  const resp = await fetch('/api/inventory/adjust', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ product_id, location_id, new_quantity }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Saldo ajustado para ' + data.balance.quantity + '.', true);
+});
+
+loadProducts();
+loadLocations();
+</script>
+</body>
+</html>

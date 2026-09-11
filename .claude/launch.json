@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fi-construcao-dev",
+      "runtimeExecutable": "python.exe",
+      "runtimeArgs": ["run.py"],
+      "port": 5000
+    }
+  ]
+}

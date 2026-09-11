@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDV — F.I Construção</title>
+<link rel="stylesheet" href="/static/css/app.css">
+<style>
+  .pdv-layout { display: grid; grid-template-columns: 1fr 380px; gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .pdv-layout { grid-template-columns: 1fr; } }
+  .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: .88rem; }
+  .cart-item .info { flex: 1; }
+  .cart-item .qty { color: var(--muted); font-size: .8rem; }
+  .cart-total { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 700; padding-top: 10px; margin-top: 10px; border-top: 2px solid var(--border); }
+  .search-result { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; }
+  .search-result:hover { background: #F4F6FB; }
+  #search-results { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><img src="/static/img/logo.jpg" alt="F.I Construção"> F.I Construção</div>
+    <nav>
+      <a href="/index.html">Painel</a>
+      <a href="/pdv.html" class="active">PDV</a>
+      <a href="/operacao.html">Operação</a>
+    </nav>
+    <div class="user">
+      <span id="current-user-name"></span>
+      <button class="logout" id="logout-btn">Sair</button>
+    </div>
+  </div>
+
+  <main>
+    <div id="alert" class="alert err" hidden></div>
+
+    <!-- Caixa fechado -->
+    <div id="cash-closed-card" class="card" hidden>
+      <h1>Abrir caixa</h1>
+      <p style="color:var(--muted)">É preciso abrir o caixa antes de iniciar as vendas.</p>
+      <div class="grid grid-2" style="max-width:400px">
+        <div>
+          <label>Valor de abertura (R$)</label>
+          <input type="number" id="opening-amount" step="0.01" value="0">
+        </div>
+      </div>
+      <button class="primary" id="open-cash-btn" style="margin-top:12px">Abrir caixa</button>
+    </div>
+
+    <!-- PDV -->
+    <div id="pdv-card" hidden>
+      <div class="pdv-layout">
+        <div>
+          <div class="card">
+            <h2>Buscar produto</h2>
+            <input type="text" id="search-input" placeholder="Nome, SKU ou código de barras...">
+            <div id="search-results"></div>
+            <div id="add-item-form" class="card" style="margin-top:12px; background:#F4F6FB" hidden>
+              <div id="add-item-name" style="font-weight:600; margin-bottom:10px"></div>
+              <div class="grid grid-2">
+                <div>
+                  <label>Unidade</label>
+                  <select id="add-item-unit"></select>
+                </div>
+                <div>
+                  <label>Quantidade</label>
+                  <input type="number" id="add-item-qty" step="0.01" value="1" min="0.01">
+                </div>
+              </div>
+              <div style="display:flex; gap:8px; margin-top:12px">
+                <button class="primary" id="add-item-confirm" style="flex:1">Adicionar ao carrinho</button>
+                <button class="secondary" id="add-item-cancel">Cancelar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" id="location-card">
+            <h2>Endereço de saída do estoque</h2>
+            <select id="location-select"></select>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Carrinho</h2>
+          <div id="cart-items"><p style="color:var(--muted); font-size:.85rem">Nenhum item ainda.</p></div>
+          <div class="cart-total">
+            <span>Total</span>
+            <span id="cart-total-value">R$ 0,00</span>
+          </div>
+
+          <div style="margin-top:16px">
+            <label>Cliente (opcional)</label>
+            <input type="text" id="customer-name" placeholder="Nome do cliente">
+          </div>
+          <div style="margin-top:10px">
+            <label>Forma de pagamento</label>
+            <select id="payment-method">
+              <option value="dinheiro">Dinheiro</option>
+              <option value="pix">Pix</option>
+              <option value="cartao_debito">Cartão débito</option>
+              <option value="cartao_credito">Cartão crédito</option>
+              <option value="boleto">Boleto</option>
+              <option value="transferencia">Transferência</option>
+            </select>
+          </div>
+
+          <button class="primary" id="finalize-btn" style="width:100%; margin-top:14px">Finalizar venda</button>
+          <button class="secondary" id="close-cash-btn" style="width:100%; margin-top:8px">Fechar caixa</button>
+
+          <div id="close-cash-form" style="margin-top:12px" hidden>
+            <label>Valor de fechamento (R$)</label>
+            <input type="number" id="closing-amount" step="0.01" value="0">
+            <div style="display:flex; gap:8px; margin-top:10px">
+              <button class="primary" id="close-cash-confirm" style="flex:1">Confirmar fechamento</button>
+              <button class="secondary" id="close-cash-cancel">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script src="/static/js/auth.js"></script>
+<script>
+let cart = [];
+let selectedProduct = null;
+
+function fmtMoney(v) {
+  return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function showAlert(msg, ok) {
+  const el = document.getElementById('alert');
+  el.className = ok ? 'alert ok' : 'alert err';
+  el.textContent = msg;
+  el.hidden = false;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => { el.hidden = true; }, 6000);
+}
+
+async function loadLocations() {
+  const resp = await fetch('/api/inventory/locations');
+  const data = await resp.json();
+  const select = document.getElementById('location-select');
+  select.innerHTML = data.locations.map(l => `<option value="${l.id}">${l.code} - ${l.description || ''}</option>`).join('');
+}
+
+async function checkCashSession() {
+  const resp = await fetch('/api/pdv/cash-session');
+  const data = await resp.json();
+  if (data.cash_session) {
+    document.getElementById('cash-closed-card').hidden = true;
+    document.getElementById('pdv-card').hidden = false;
+    await loadLocations();
+  } else {
+    document.getElementById('cash-closed-card').hidden = false;
+    document.getElementById('pdv-card').hidden = true;
+  }
+}
+
+document.getElementById('open-cash-btn').addEventListener('click', async () => {
+  const opening_amount = document.getElementById('opening-amount').value || '0';
+  const resp = await fetch('/api/pdv/cash-session/open', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ opening_amount }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  checkCashSession();
+});
+
+document.getElementById('close-cash-btn').addEventListener('click', () => {
+  document.getElementById('close-cash-form').hidden = false;
+});
+
+document.getElementById('close-cash-cancel').addEventListener('click', () => {
+  document.getElementById('close-cash-form').hidden = true;
+});
+
+document.getElementById('close-cash-confirm').addEventListener('click', async () => {
+  const resp = await fetch('/api/pdv/cash-session');
+  const data = await resp.json();
+  if (!data.cash_session) return;
+
+  const closing = document.getElementById('closing-amount').value || '0';
+  const closeResp = await fetch(`/api/pdv/cash-session/${data.cash_session.id}/close`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ closing_amount: closing }),
+  });
+  const closeData = await closeResp.json();
+  if (!closeResp.ok) { showAlert(closeData.error); return; }
+  document.getElementById('close-cash-form').hidden = true;
+  checkCashSession();
+});
+
+let searchTimeout;
+document.getElementById('search-input').addEventListener('input', (e) => {
+  clearTimeout(searchTimeout);
+  const q = e.target.value.trim();
+  const resultsEl = document.getElementById('search-results');
+  if (!q) { resultsEl.innerHTML = ''; return; }
+  searchTimeout = setTimeout(async () => {
+    const resp = await fetch('/api/products?q=' + encodeURIComponent(q));
+    const data = await resp.json();
+    resultsEl.innerHTML = data.products.map(p => `
+      <div class="search-result" data-id="${p.id}">
+        <span>${p.name} <span style="color:var(--muted)">(${p.sku})</span></span>
+        <span>${fmtMoney(p.sale_price)} / ${p.base_unit}</span>
+      </div>
+    `).join('') || '<div style="padding:10px;color:var(--muted)">Nenhum produto encontrado.</div>';
+
+    resultsEl.querySelectorAll('.search-result').forEach(el => {
+      el.addEventListener('click', () => openAddItemForm(data.products.find(p => p.id == el.dataset.id)));
+    });
+  }, 250);
+});
+
+function openAddItemForm(product) {
+  selectedProduct = product;
+  document.getElementById('add-item-name').textContent = product.name + ' — ' + fmtMoney(product.sale_price) + ' / ' + product.base_unit;
+
+  const unitSelect = document.getElementById('add-item-unit');
+  const units = [product.base_unit, ...product.conversions.map(c => c.unit)];
+  unitSelect.innerHTML = units.map(u => `<option value="${u}">${u}</option>`).join('');
+
+  document.getElementById('add-item-qty').value = '1';
+  document.getElementById('add-item-form').hidden = false;
+  document.getElementById('search-results').innerHTML = '';
+}
+
+function closeAddItemForm() {
+  selectedProduct = null;
+  document.getElementById('add-item-form').hidden = true;
+  document.getElementById('search-input').value = '';
+}
+
+document.getElementById('add-item-cancel').addEventListener('click', closeAddItemForm);
+
+document.getElementById('add-item-confirm').addEventListener('click', () => {
+  if (!selectedProduct) return;
+  const unit = document.getElementById('add-item-unit').value;
+  const quantity = parseFloat(document.getElementById('add-item-qty').value);
+  if (!quantity || quantity <= 0) { showAlert('Informe uma quantidade válida.'); return; }
+
+  let unitPrice = parseFloat(selectedProduct.sale_price);
+  if (unit !== selectedProduct.base_unit) {
+    const conv = selectedProduct.conversions.find(c => c.unit === unit);
+    unitPrice = unitPrice * parseFloat(conv.factor_to_base);
+  }
+
+  cart.push({ product_id: selectedProduct.id, name: selectedProduct.name, unit, quantity, unit_price: unitPrice });
+  renderCart();
+  closeAddItemForm();
+});
+
+function renderCart() {
+  const el = document.getElementById('cart-items');
+  if (cart.length === 0) {
+    el.innerHTML = '<p style="color:var(--muted); font-size:.85rem">Nenhum item ainda.</p>';
+  } else {
+    el.innerHTML = cart.map((item, idx) => `
+      <div class="cart-item">
+        <div class="info">
+          ${item.name}
+          <div class="qty">${item.quantity} ${item.unit} x ${fmtMoney(item.unit_price)}</div>
+        </div>
+        <div>
+          ${fmtMoney(item.quantity * item.unit_price)}
+          <button class="danger" style="padding:4px 8px; margin-left:8px" data-idx="${idx}">×</button>
+        </div>
+      </div>
+    `).join('');
+    el.querySelectorAll('button[data-idx]').forEach(btn => {
+      btn.addEventListener('click', () => { cart.splice(btn.dataset.idx, 1); renderCart(); });
+    });
+  }
+  const total = cart.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
+  document.getElementById('cart-total-value').textContent = fmtMoney(total);
+}
+
+document.getElementById('finalize-btn').addEventListener('click', async () => {
+  if (cart.length === 0) { showAlert('Adicione ao menos um item.'); return; }
+  const total = cart.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
+
+  const payload = {
+    location_id: parseInt(document.getElementById('location-select').value),
+    items: cart.map(i => ({ product_id: i.product_id, unit: i.unit, quantity: i.quantity, unit_price: i.unit_price })),
+    payments: [{ method: document.getElementById('payment-method').value, amount: total.toFixed(2) }],
+    customer_name: document.getElementById('customer-name').value || null,
+  };
+
+  const resp = await fetch('/api/pdv/sales', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+
+  showAlert('Venda #' + data.sale.id + ' registrada com sucesso! Total: ' + fmtMoney(data.sale.total), true);
+  cart = [];
+  renderCart();
+  document.getElementById('customer-name').value = '';
+});
+
+checkCashSession();
+</script>
+</body>
+</html>

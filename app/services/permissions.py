@@ -1,0 +1,42 @@
+"""Mapa de permissões por papel. Exceções por usuário ficam em UserPermissionOverride."""
+from app.models.company import ROLE_ADMIN, ROLE_MANAGER, ROLE_CASHIER, ROLE_STOCK
+
+PERM_PDV = "pdv"
+PERM_ESTOQUE_VER = "estoque.ver"
+PERM_ESTOQUE_AJUSTAR = "estoque.ajustar"
+PERM_ORCAMENTOS = "orcamentos"
+PERM_PEDIDOS = "pedidos"
+PERM_COMPRAS = "compras"
+PERM_FINANCEIRO = "financeiro"
+PERM_ENTREGAS = "entregas"
+PERM_USUARIOS = "usuarios"
+PERM_CONFIGURACOES = "configuracoes"
+
+ALL_PERMISSIONS = [
+    PERM_PDV,
+    PERM_ESTOQUE_VER,
+    PERM_ESTOQUE_AJUSTAR,
+    PERM_ORCAMENTOS,
+    PERM_PEDIDOS,
+    PERM_COMPRAS,
+    PERM_FINANCEIRO,
+    PERM_ENTREGAS,
+    PERM_USUARIOS,
+    PERM_CONFIGURACOES,
+]
+
+ROLE_PERMISSIONS = {
+    ROLE_ADMIN: set(ALL_PERMISSIONS),
+    ROLE_MANAGER: {
+        PERM_PDV,
+        PERM_ESTOQUE_VER,
+        PERM_ESTOQUE_AJUSTAR,
+        PERM_ORCAMENTOS,
+        PERM_PEDIDOS,
+        PERM_COMPRAS,
+        PERM_FINANCEIRO,
+        PERM_ENTREGAS,
+    },
+    ROLE_CASHIER: {PERM_PDV, PERM_ESTOQUE_VER, PERM_ORCAMENTOS, PERM_PEDIDOS},
+    ROLE_STOCK: {PERM_ESTOQUE_VER, PERM_ESTOQUE_AJUSTAR, PERM_PEDIDOS, PERM_ENTREGAS},
+}

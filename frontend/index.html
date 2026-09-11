@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel — F.I Construção</title>
+<link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><img src="/static/img/logo.jpg" alt="F.I Construção"> F.I Construção</div>
+    <nav>
+      <a href="/index.html" class="active">Painel</a>
+      <a href="/pdv.html">PDV</a>
+      <a href="/operacao.html">Operação</a>
+    </nav>
+    <div class="user">
+      <span id="current-user-name"></span>
+      <button class="logout" id="logout-btn">Sair</button>
+    </div>
+  </div>
+
+  <main>
+    <div class="card">
+      <h1>Bem-vindo</h1>
+      <p style="color:var(--muted); margin:0">Visão geral do depósito e acesso rápido aos módulos.</p>
+    </div>
+
+    <div class="card">
+      <h2>Módulos</h2>
+      <div class="module-grid">
+        <a href="/pdv.html" class="module-card">
+          <span class="icon">🧾</span>
+          <div class="title">PDV / Caixa</div>
+          <div class="desc">Venda de pronta entrega no balcão</div>
+        </a>
+        <a href="/operacao.html#estoque" class="module-card">
+          <span class="icon">📦</span>
+          <div class="title">Estoque</div>
+          <div class="desc">Saldo por endereço e lote, ajustes</div>
+        </a>
+        <a href="/operacao.html#orcamentos" class="module-card">
+          <span class="icon">📋</span>
+          <div class="title">Orçamentos</div>
+          <div class="desc">Aprovação e conversão em pedido</div>
+        </a>
+        <a href="/operacao.html#pedidos" class="module-card">
+          <span class="icon">🚚</span>
+          <div class="title">Pedidos</div>
+          <div class="desc">Reserva, separação, retirada, entrega</div>
+        </a>
+        <a href="/operacao.html#compras" class="module-card">
+          <span class="icon">🏭</span>
+          <div class="title">Compras</div>
+          <div class="desc">Fornecedores, cotações e recebimentos</div>
+        </a>
+        <a href="/operacao.html#financeiro" class="module-card">
+          <span class="icon">💰</span>
+          <div class="title">Financeiro</div>
+          <div class="desc">Contas a pagar</div>
+        </a>
+        <a href="/operacao.html#entregas" class="module-card">
+          <span class="icon">🛻</span>
+          <div class="title">Entregas</div>
+          <div class="desc">Transportadoras, veículos e ocorrências</div>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script src="/static/js/auth.js"></script>
+</body>
+</html>
