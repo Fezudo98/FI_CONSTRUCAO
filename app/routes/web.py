@@ -30,6 +30,11 @@ def operacao_page():
     return send_from_directory(FRONTEND_DIR, "operacao.html")
 
 
+@bp.get("/relatorios.html")
+def relatorios_page():
+    return send_from_directory(FRONTEND_DIR, "relatorios.html")
+
+
 @bp.get("/static/<path:filename>")
 def frontend_static(filename):
     return send_from_directory(os.path.join(FRONTEND_DIR, "static"), filename)

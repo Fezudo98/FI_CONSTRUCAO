@@ -1,8 +1,12 @@
-from flask import Blueprint, request, jsonify
+import os
+
+from flask import Blueprint, request, jsonify, send_from_directory, current_app
 
 from app.extensions import db
 from app.models.catalog import Product, UnitConversion
-from app.services.auth import login_required, permission_required
+from app.services import barcode_service
+from app.services.audit import log_action
+from app.services.auth import login_required, permission_required, current_user
 from app.services.permissions import PERM_CONFIGURACOES
 
 bp = Blueprint("api_catalog", __name__, url_prefix="/api/products")
@@ -75,5 +79,22 @@ def create_product():
             )
         )
 
+    log_action(current_user().company_id, current_user(), "produto.criado", f"{product.sku} - {product.name}")
     db.session.commit()
     return jsonify({"product": _serialize_product(product)}), 201
+
+
+@bp.post("/<int:product_id>/barcode")
+@permission_required(PERM_CONFIGURACOES)
+def generate_barcode(product_id):
+    product = Product.query.get_or_404(product_id)
+    filename = barcode_service.generate_barcode(product)
+    db.session.commit()
+    return jsonify(
+        {"product": _serialize_product(product), "barcode_url": f"/api/products/barcodes/{filename}"}
+    ), 201
+
+
+@bp.get("/barcodes/<path:filename>")
+def serve_barcode(filename):
+    return send_from_directory(current_app.config["BARCODE_FOLDER"], filename)

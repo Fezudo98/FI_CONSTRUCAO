@@ -21,6 +21,7 @@
       <a href="/index.html">Painel</a>
       <a href="/pdv.html">PDV</a>
       <a href="/operacao.html" class="active">Operação</a>
+      <a href="/relatorios.html">Relatórios</a>
     </nav>
     <div class="user">
       <span id="current-user-name"></span>
@@ -33,11 +34,13 @@
 
     <div class="tabs">
       <button data-tab="estoque" class="active">Estoque</button>
+      <button data-tab="clientes">Clientes</button>
       <button data-tab="orcamentos">Orçamentos</button>
       <button data-tab="pedidos">Pedidos</button>
       <button data-tab="compras">Compras</button>
       <button data-tab="financeiro">Financeiro</button>
       <button data-tab="entregas">Entregas</button>
+      <button data-tab="auditoria">Auditoria</button>
     </div>
 
     <!-- ESTOQUE -->
@@ -98,12 +101,40 @@
       </div>
     </div>
 
+    <!-- CLIENTES -->
+    <div class="section" id="section-clientes">
+      <div class="card">
+        <h2>Novo cliente</h2>
+        <div class="grid grid-3">
+          <div><label>Nome</label><input type="text" id="cust-name"></div>
+          <div><label>Documento (CPF/CNPJ)</label><input type="text" id="cust-document"></div>
+          <div><label>Telefone</label><input type="text" id="cust-phone"></div>
+          <div><label>E-mail</label><input type="text" id="cust-email"></div>
+          <div><label>Rua</label><input type="text" id="cust-street"></div>
+          <div><label>Número</label><input type="text" id="cust-number"></div>
+          <div><label>Bairro</label><input type="text" id="cust-district"></div>
+          <div><label>Cidade</label><input type="text" id="cust-city"></div>
+          <div><label>UF</label><input type="text" id="cust-state" maxlength="2"></div>
+        </div>
+        <button class="primary" id="customer-create-btn" style="margin-top:12px">Criar cliente</button>
+      </div>
+
+      <div class="card">
+        <h2>Clientes cadastrados</h2>
+        <input type="text" id="customer-search" placeholder="Buscar por nome, documento ou telefone..." style="margin-bottom:12px">
+        <div class="table-responsive"><table id="customers-table">
+          <thead><tr><th>Nome</th><th>Documento</th><th>Telefone</th><th>Endereço</th><th>Ações</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
     <!-- ORCAMENTOS -->
     <div class="section" id="section-orcamentos">
       <div class="card">
         <h2>Novo orçamento</h2>
         <div class="grid grid-3">
-          <div><label>Cliente</label><input type="text" id="quote-customer"></div>
+          <div><label>Cliente</label><input type="text" id="quote-customer"><div id="quote-customer-results" class="autocomplete-results"></div></div>
           <div><label>Documento (opcional)</label><input type="text" id="quote-document"></div>
           <div><label>Telefone (opcional)</label><input type="text" id="quote-phone"></div>
         </div>
@@ -131,7 +162,7 @@
       <div class="card">
         <h2>Novo pedido direto</h2>
         <div class="grid grid-3">
-          <div><label>Cliente</label><input type="text" id="order-customer"></div>
+          <div><label>Cliente</label><input type="text" id="order-customer"><div id="order-customer-results" class="autocomplete-results"></div></div>
           <div>
             <label>Endereço de origem</label>
             <select id="order-location"></select>
@@ -267,6 +298,18 @@
         </table></div>
       </div>
     </div>
+
+    <!-- AUDITORIA -->
+    <div class="section" id="section-auditoria">
+      <div class="card">
+        <h2>Log de auditoria</h2>
+        <p class="muted" style="margin-top:-6px">Ações sensíveis registradas no sistema (vendas, caixa, produtos, estoque, clientes).</p>
+        <div class="table-responsive"><table id="audit-table">
+          <thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Detalhes</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
   </main>
 
 <script src="/static/js/auth.js"></script>
@@ -279,12 +322,18 @@ function showAlert(msg, ok) {
   setTimeout(() => { el.hidden = true; }, 5000);
 }
 
+const TAB_RELOAD = {
+  auditoria: () => loadAuditLogs(),
+  clientes: () => loadCustomers(),
+};
+
 document.querySelectorAll('.tabs button').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('section-' + btn.dataset.tab).classList.add('active');
+    if (TAB_RELOAD[btn.dataset.tab]) TAB_RELOAD[btn.dataset.tab]();
   });
 });
 
@@ -389,6 +438,42 @@ function actionBtn(fn, label, cls) {
   return `<button type="button" class="${cls || 'secondary'}" style="padding:5px 10px; font-size:.75rem; margin:2px 2px 0 0" onclick="${fn}">${label}</button>`;
 }
 
+/** Autocomplete de cliente cadastrado sobre um <input> de texto livre.
+ * Retorna um objeto com getSelectedId()/reset(), sem travar a digitação de
+ * um nome avulso (cliente nao precisa estar cadastrado). */
+function setupCustomerAutocomplete(inputId, resultsId) {
+  const input = document.getElementById(inputId);
+  const results = document.getElementById(resultsId);
+  let selectedId = null;
+  let timeout;
+
+  input.addEventListener('input', (e) => {
+    selectedId = null;
+    clearTimeout(timeout);
+    const q = e.target.value.trim();
+    if (q.length < 2) { results.innerHTML = ''; return; }
+    timeout = setTimeout(async () => {
+      const resp = await fetch('/api/customers?q=' + encodeURIComponent(q));
+      const data = await resp.json();
+      results.innerHTML = data.customers.map(c => `
+        <div class="search-result" data-id="${c.id}" data-name="${c.name}" data-doc="${c.document || ''}" data-phone="${c.phone || ''}">
+          <span>${c.name}</span><span style="color:var(--muted)">${c.phone || c.document || ''}</span>
+        </div>
+      `).join('');
+      results.querySelectorAll('.search-result').forEach(el => {
+        el.addEventListener('click', () => {
+          selectedId = parseInt(el.dataset.id);
+          input.value = el.dataset.name;
+          results.innerHTML = '';
+          results.dispatchEvent(new CustomEvent('customer-selected', { detail: el.dataset }));
+        });
+      });
+    }, 250);
+  });
+
+  return { getSelectedId: () => selectedId, reset: () => { selectedId = null; input.value = ''; results.innerHTML = ''; } };
+}
+
 const STATUS_BADGE = {
   draft: 'warn', sent: 'warn', approved: 'ok', rejected: 'err', converted: 'ok',
   reserved: 'warn', separated: 'warn', picked_up: 'ok', delivered: 'ok', cancelled: 'err',
@@ -491,6 +576,7 @@ function createItemBuilder(containerId) {
 // ---------- orçamentos ----------
 
 const quoteBuilder = createItemBuilder('quote-items-builder');
+const quoteCustomerAutocomplete = setupCustomerAutocomplete('quote-customer', 'quote-customer-results');
 
 async function loadQuotes() {
   const resp = await fetch('/api/quotes');
@@ -520,13 +606,14 @@ document.getElementById('quote-create-btn').addEventListener('click', async () =
       customer_name,
       customer_document: document.getElementById('quote-document').value.trim() || null,
       customer_phone: document.getElementById('quote-phone').value.trim() || null,
+      customer_id: quoteCustomerAutocomplete.getSelectedId(),
       items,
     }),
   });
   const data = await resp.json();
   if (!resp.ok) { showAlert(data.error); return; }
   showAlert('Orçamento criado.', true);
-  document.getElementById('quote-customer').value = '';
+  quoteCustomerAutocomplete.reset();
   document.getElementById('quote-document').value = '';
   document.getElementById('quote-phone').value = '';
   quoteBuilder.reset();
@@ -568,6 +655,7 @@ async function convertQuote(id) {
 // ---------- pedidos ----------
 
 const orderBuilder = createItemBuilder('order-items-builder');
+const orderCustomerAutocomplete = setupCustomerAutocomplete('order-customer', 'order-customer-results');
 const ORDER_NEXT_LABEL = { reserved: 'Separar', separated: 'Confirmar retirada', picked_up: 'Marcar entregue' };
 
 async function loadOrders() {
@@ -609,12 +697,13 @@ document.getElementById('order-create-btn').addEventListener('click', async () =
     body: JSON.stringify({
       customer_name, location_id, items,
       is_delivery: document.getElementById('order-is-delivery').checked,
+      customer_id: orderCustomerAutocomplete.getSelectedId(),
     }),
   });
   const data = await resp.json();
   if (!resp.ok) { showAlert(data.error); return; }
   showAlert('Pedido #' + data.order.id + ' criado.', true);
-  document.getElementById('order-customer').value = '';
+  orderCustomerAutocomplete.reset();
   document.getElementById('order-is-delivery').checked = false;
   orderBuilder.reset();
   loadOrders();
@@ -903,10 +992,81 @@ function addOccurrence(deliveryId) {
   });
 }
 
+// ---------- clientes ----------
+
+async function loadCustomers(q) {
+  const resp = await fetch('/api/customers' + (q ? '?q=' + encodeURIComponent(q) : ''));
+  const data = await resp.json();
+  const tbody = document.querySelector('#customers-table tbody');
+  tbody.innerHTML = data.customers.map(c => `
+    <tr>
+      <td>${c.name}</td><td>${c.document || ''}</td><td>${c.phone || ''}</td>
+      <td>${c.full_address || ''}</td>
+      <td>${actionBtn(`deleteCustomer(${c.id})`, 'Remover', 'danger')}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" style="color:var(--muted)">Nenhum cliente cadastrado.</td></tr>';
+}
+
+document.getElementById('customer-search').addEventListener('input', (e) => {
+  loadCustomers(e.target.value.trim());
+});
+
+document.getElementById('customer-create-btn').addEventListener('click', async () => {
+  const payload = {
+    name: document.getElementById('cust-name').value.trim(),
+    document: document.getElementById('cust-document').value.trim() || null,
+    phone: document.getElementById('cust-phone').value.trim() || null,
+    email: document.getElementById('cust-email').value.trim() || null,
+    address_street: document.getElementById('cust-street').value.trim() || null,
+    address_number: document.getElementById('cust-number').value.trim() || null,
+    address_district: document.getElementById('cust-district').value.trim() || null,
+    address_city: document.getElementById('cust-city').value.trim() || null,
+    address_state: document.getElementById('cust-state').value.trim().toUpperCase() || null,
+  };
+  if (!payload.name) { showAlert('Informe o nome do cliente.'); return; }
+
+  const resp = await fetch('/api/customers', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Cliente criado.', true);
+  ['cust-name', 'cust-document', 'cust-phone', 'cust-email', 'cust-street', 'cust-number', 'cust-district', 'cust-city', 'cust-state']
+    .forEach(id => document.getElementById(id).value = '');
+  loadCustomers();
+});
+
+async function deleteCustomer(id) {
+  if (!confirm('Remover este cliente?')) return;
+  const resp = await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+  showAlert('Cliente removido.', true);
+  loadCustomers();
+}
+
+// ---------- auditoria ----------
+
+async function loadAuditLogs() {
+  const resp = await fetch('/api/audit/logs');
+  if (!resp.ok) return; // usuario sem permissao (nao-admin); aba fica vazia silenciosamente
+  const data = await resp.json();
+  const tbody = document.querySelector('#audit-table tbody');
+  tbody.innerHTML = data.logs.map(log => `
+    <tr>
+      <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
+      <td>${log.user_name || 'Sistema'}</td>
+      <td>${log.action}</td>
+      <td>${log.details || ''}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="4" style="color:var(--muted)">Nenhum registro ainda.</td></tr>';
+}
+
 // ---------- init ----------
 
 loadProducts();
 loadLocations();
+loadCustomers();
 loadQuotes();
 loadOrders();
 loadSuppliers();
@@ -915,6 +1075,7 @@ loadPayables();
 loadCarrierSelects();
 loadVehiclesAndDrivers();
 loadDeliveries();
+loadAuditLogs();
 </script>
 </body>
 </html>

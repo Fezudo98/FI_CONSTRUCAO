@@ -13,6 +13,7 @@
       <a href="/index.html" class="active">Painel</a>
       <a href="/pdv.html">PDV</a>
       <a href="/operacao.html">Operação</a>
+      <a href="/relatorios.html">Relatórios</a>
     </nav>
     <div class="user">
       <span id="current-user-name"></span>
@@ -24,6 +25,14 @@
     <div class="card">
       <h1>Bem-vindo</h1>
       <p style="color:var(--muted); margin:0">Visão geral do depósito e acesso rápido aos módulos.</p>
+    </div>
+
+    <div class="card" id="low-stock-card" hidden>
+      <h2>⚠️ Estoque baixo</h2>
+      <div class="table-responsive"><table id="low-stock-table">
+        <thead><tr><th>Produto</th><th>Saldo atual</th><th>Mínimo</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
     </div>
 
     <div class="card">
@@ -38,6 +47,11 @@
           <span class="icon">📦</span>
           <div class="title">Estoque</div>
           <div class="desc">Saldo por endereço e lote, ajustes</div>
+        </a>
+        <a href="/operacao.html#clientes" class="module-card">
+          <span class="icon">👥</span>
+          <div class="title">Clientes</div>
+          <div class="desc">Cadastro e histórico de contato</div>
         </a>
         <a href="/operacao.html#orcamentos" class="module-card">
           <span class="icon">📋</span>
@@ -64,10 +78,34 @@
           <div class="title">Entregas</div>
           <div class="desc">Transportadoras, veículos e ocorrências</div>
         </a>
+        <a href="/relatorios.html" class="module-card">
+          <span class="icon">📊</span>
+          <div class="title">Relatórios</div>
+          <div class="desc">Vendas, ranking e formas de pagamento</div>
+        </a>
+        <a href="/operacao.html#auditoria" class="module-card">
+          <span class="icon">🛡️</span>
+          <div class="title">Auditoria</div>
+          <div class="desc">Registro de ações sensíveis</div>
+        </a>
       </div>
     </div>
   </main>
 
   <script src="/static/js/auth.js"></script>
+  <script>
+    async function loadLowStock() {
+      const resp = await fetch('/api/reports/low-stock');
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (!data.products.length) return;
+
+      document.getElementById('low-stock-card').hidden = false;
+      document.querySelector('#low-stock-table tbody').innerHTML = data.products.map(p => `
+        <tr><td>${p.name}</td><td>${p.current_stock}</td><td>${p.min_stock}</td></tr>
+      `).join('');
+    }
+    loadLowStock();
+  </script>
 </body>
 </html>

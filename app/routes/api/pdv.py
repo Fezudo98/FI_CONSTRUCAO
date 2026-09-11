@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify
 
 from app.extensions import db
+from app.models.sales import Sale
 from app.services import pdv
+from app.services.audit import log_action
 from app.services.auth import permission_required, current_user
 from app.services.permissions import PERM_PDV
 from app.services.errors import ServiceError
@@ -34,6 +36,7 @@ def open_cash_session():
     data = request.get_json(silent=True) or {}
     try:
         session_obj = pdv.open_cash_session(user.company_id, user.id, data.get("opening_amount", 0))
+        log_action(user.company_id, user, "caixa.aberto", f"Abertura: R$ {data.get('opening_amount', 0)}")
         db.session.commit()
     except ServiceError as exc:
         db.session.rollback()
@@ -52,6 +55,7 @@ def close_cash_session(session_id):
     data = request.get_json(silent=True) or {}
     try:
         pdv.close_cash_session(session_obj, user.id, data.get("closing_amount", 0))
+        log_action(user.company_id, user, "caixa.fechado", f"Fechamento: R$ {data.get('closing_amount', 0)}")
         db.session.commit()
     except ServiceError as exc:
         db.session.rollback()
@@ -84,10 +88,46 @@ def create_sale():
             data.get("payments", []),
             customer_name=data.get("customer_name"),
             customer_document=data.get("customer_document"),
+            customer_id=data.get("customer_id"),
         )
+        db.session.flush()
+        log_action(user.company_id, user, "venda.registrada", f"Venda #{sale.id} - R$ {sale.total}")
         db.session.commit()
     except ServiceError as exc:
         db.session.rollback()
         return jsonify({"error": exc.message}), exc.status_code
 
     return jsonify({"sale": {"id": sale.id, "total": str(sale.total)}}), 201
+
+
+@bp.get("/sales/<int:sale_id>")
+@permission_required(PERM_PDV)
+def get_sale(sale_id):
+    user = current_user()
+    sale = Sale.query.get_or_404(sale_id)
+    if sale.company_id != user.company_id:
+        return jsonify({"error": "Venda não encontrada."}), 404
+
+    return jsonify(
+        {
+            "sale": {
+                "id": sale.id,
+                "customer_name": sale.customer_name,
+                "customer_document": sale.customer_document,
+                "total": str(sale.total),
+                "created_at": sale.created_at.isoformat(),
+                "created_by": sale.created_by_id,
+                "items": [
+                    {
+                        "product_name": item.product.name if item.product else "",
+                        "unit": item.unit,
+                        "quantity": str(item.quantity),
+                        "unit_price": str(item.unit_price),
+                        "total": str(item.total),
+                    }
+                    for item in sale.items
+                ],
+                "payments": [{"method": p.method, "amount": str(p.amount)} for p in sale.payments],
+            }
+        }
+    )

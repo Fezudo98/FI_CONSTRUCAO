@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatórios — F.I Construção</title>
+<link rel="stylesheet" href="/static/css/app.css">
+<style>
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .kpi { background: #F4F6FB; border-radius: 10px; padding: 14px; text-align: center; }
+  .kpi .value { font-size: 1.3rem; font-weight: 700; color: var(--brand-primary-dark); }
+  .kpi .label { font-size: .75rem; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+  .chart-wrap { position: relative; height: 260px; }
+  .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><img src="/static/img/logo.jpg" alt="F.I Construção"> F.I Construção</div>
+    <nav>
+      <a href="/index.html">Painel</a>
+      <a href="/pdv.html">PDV</a>
+      <a href="/operacao.html">Operação</a>
+      <a href="/relatorios.html" class="active">Relatórios</a>
+    </nav>
+    <div class="user">
+      <span id="current-user-name"></span>
+      <button class="logout" id="logout-btn">Sair</button>
+    </div>
+  </div>
+
+  <main>
+    <div class="card">
+      <h2>Período</h2>
+      <div class="grid grid-2" style="max-width:420px">
+        <div><label>De</label><input type="date" id="date-start"></div>
+        <div><label>Até</label><input type="date" id="date-end"></div>
+      </div>
+      <button class="primary" id="apply-filter-btn" style="margin-top:12px">Aplicar</button>
+    </div>
+
+    <div class="card">
+      <div class="kpi-grid">
+        <div class="kpi"><div class="value" id="kpi-revenue">R$ 0,00</div><div class="label">Receita</div></div>
+        <div class="kpi"><div class="value" id="kpi-count">0</div><div class="label">Vendas</div></div>
+        <div class="kpi"><div class="value" id="kpi-ticket">R$ 0,00</div><div class="label">Ticket médio</div></div>
+        <div class="kpi"><div class="value" id="kpi-profit">R$ 0,00</div><div class="label">Lucro bruto*</div></div>
+      </div>
+      <p class="muted" style="margin-top:10px">*Lucro bruto calculado com o custo atual do produto, não o custo histórico no momento da venda.</p>
+    </div>
+
+    <div class="charts-grid">
+      <div class="card">
+        <h2>Vendas no período</h2>
+        <div class="chart-wrap"><canvas id="sales-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Formas de pagamento</h2>
+        <div class="chart-wrap"><canvas id="payment-chart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Produtos mais vendidos</h2>
+      <div class="chart-wrap" style="height:320px"><canvas id="products-chart"></canvas></div>
+    </div>
+  </main>
+
+<script src="/static/js/vendor/chart.umd.min.js"></script>
+<script src="/static/js/auth.js"></script>
+<script>
+let salesChart, paymentChart, productsChart;
+
+function fmtMoney(v) {
+  return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function defaultDates() {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - 30);
+  document.getElementById('date-end').value = end.toISOString().slice(0, 10);
+  document.getElementById('date-start').value = start.toISOString().slice(0, 10);
+}
+
+async function loadDashboard() {
+  const date_start = document.getElementById('date-start').value;
+  const date_end = document.getElementById('date-end').value;
+  const resp = await fetch(`/api/reports/dashboard?date_start=${date_start}&date_end=${date_end}`);
+  if (!resp.ok) return;
+  const data = await resp.json();
+
+  document.getElementById('kpi-revenue').textContent = fmtMoney(data.kpis.revenue);
+  document.getElementById('kpi-count').textContent = data.kpis.sale_count;
+  document.getElementById('kpi-ticket').textContent = fmtMoney(data.kpis.average_ticket);
+  document.getElementById('kpi-profit').textContent = fmtMoney(data.kpis.gross_profit);
+
+  renderSalesChart(data.sales_by_day);
+  renderPaymentChart(data.payment_breakdown);
+  renderProductsChart(data.top_products);
+}
+
+function renderSalesChart(rows) {
+  const ctx = document.getElementById('sales-chart');
+  const config = {
+    type: 'line',
+    data: {
+      labels: rows.map(r => r.day),
+      datasets: [{ label: 'Vendas (R$)', data: rows.map(r => parseFloat(r.total)), borderColor: '#08299B', backgroundColor: 'rgba(8,41,155,.1)', fill: true, tension: .3 }],
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } },
+  };
+  if (salesChart) { salesChart.data = config.data; salesChart.update(); } else { salesChart = new Chart(ctx, config); }
+}
+
+function renderPaymentChart(rows) {
+  const ctx = document.getElementById('payment-chart');
+  const labels = { dinheiro: 'Dinheiro', pix: 'Pix', cartao_debito: 'Débito', cartao_credito: 'Crédito', boleto: 'Boleto', transferencia: 'Transferência' };
+  const config = {
+    type: 'doughnut',
+    data: {
+      labels: rows.map(r => labels[r.method] || r.method),
+      datasets: [{ data: rows.map(r => parseFloat(r.total)), backgroundColor: ['#08299B', '#FFA20A', '#1B8A4B', '#C22B2B', '#6B7FE8', '#A85D00'] }],
+    },
+    options: { responsive: true, maintainAspectRatio: false },
+  };
+  if (paymentChart) { paymentChart.data = config.data; paymentChart.update(); } else { paymentChart = new Chart(ctx, config); }
+}
+
+function renderProductsChart(rows) {
+  const ctx = document.getElementById('products-chart');
+  const config = {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => r.name),
+      datasets: [{ label: 'Quantidade vendida', data: rows.map(r => parseFloat(r.quantity)), backgroundColor: '#FFA20A' }],
+    },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } },
+  };
+  if (productsChart) { productsChart.data = config.data; productsChart.update(); } else { productsChart = new Chart(ctx, config); }
+}
+
+document.getElementById('apply-filter-btn').addEventListener('click', loadDashboard);
+
+defaultDates();
+loadDashboard();
+</script>
+</body>
+</html>

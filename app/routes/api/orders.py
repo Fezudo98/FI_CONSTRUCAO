@@ -13,6 +13,7 @@ bp = Blueprint("api_orders", __name__, url_prefix="/api/orders")
 def _serialize(o: Order):
     return {
         "id": o.id,
+        "customer_id": o.customer_id,
         "customer_name": o.customer_name,
         "status": o.status,
         "total": str(o.total),
@@ -61,6 +62,7 @@ def create_order():
             data.get("items", []),
             location_id,
             is_delivery=data.get("is_delivery", False),
+            customer_id=data.get("customer_id"),
         )
         db.session.commit()
     except ServiceError as exc:

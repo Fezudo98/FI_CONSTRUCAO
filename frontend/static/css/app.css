@@ -108,6 +108,11 @@ label { display: block; font-size: .78rem; color: var(--muted); margin-bottom: 4
 .module-card .desc { font-size: .8rem; color: var(--muted); }
 .module-card.disabled { opacity: .5; pointer-events: none; }
 
+.search-result { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; font-size: .85rem; }
+.search-result:hover { background: #F4F6FB; }
+.search-result:last-child { border-bottom: none; }
+.autocomplete-results:not(:empty) { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; background: #fff; }
+
 @media (max-width: 720px) {
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .topbar nav { display: none; }

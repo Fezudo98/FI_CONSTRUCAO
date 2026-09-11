@@ -14,7 +14,27 @@
   .cart-total { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 700; padding-top: 10px; margin-top: 10px; border-top: 2px solid var(--border); }
   .search-result { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; }
   .search-result:hover { background: #F4F6FB; }
-  #search-results { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; }
+  #search-results, #customer-results { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; }
+
+  #receipt-overlay {
+    position: fixed; inset: 0; background: rgba(10,15,30,.55); display: flex;
+    align-items: center; justify-content: center; z-index: 100; padding: 16px;
+  }
+  #receipt-modal { background: #fff; border-radius: 12px; max-width: 420px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  #receipt-content { padding: 20px; font-size: .85rem; }
+  #receipt-content .row { display: flex; justify-content: space-between; padding: 2px 0; }
+  #receipt-content hr { border: none; border-top: 1px dashed var(--border); margin: 10px 0; }
+  #receipt-content .total-row { font-weight: 700; font-size: 1.05rem; }
+  #receipt-actions { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+
+  @media print {
+    body > *:not(#receipt-overlay) { display: none !important; }
+    #receipt-overlay { position: static; background: none; padding: 0; }
+    #receipt-modal { max-width: none; max-height: none; box-shadow: none; border-radius: 0; }
+    #receipt-actions { display: none !important; }
+    #receipt-content.thermal { width: 74mm; font-family: 'Courier New', monospace; font-size: 11px; }
+    @page { margin: 8mm; }
+  }
 </style>
 </head>
 <body>
@@ -24,6 +44,7 @@
       <a href="/index.html">Painel</a>
       <a href="/pdv.html" class="active">PDV</a>
       <a href="/operacao.html">Operação</a>
+      <a href="/relatorios.html">Relatórios</a>
     </nav>
     <div class="user">
       <span id="current-user-name"></span>
@@ -90,7 +111,8 @@
 
           <div style="margin-top:16px">
             <label>Cliente (opcional)</label>
-            <input type="text" id="customer-name" placeholder="Nome do cliente">
+            <input type="text" id="customer-name" placeholder="Nome do cliente ou buscar cadastrado...">
+            <div id="customer-results"></div>
           </div>
           <div style="margin-top:10px">
             <label>Forma de pagamento</label>
@@ -120,10 +142,23 @@
     </div>
   </main>
 
+  <!-- Recibo -->
+  <div id="receipt-overlay" hidden>
+    <div id="receipt-modal">
+      <div id="receipt-content"></div>
+      <div id="receipt-actions">
+        <button class="secondary" id="print-thermal-btn" style="flex:1">Imprimir (térmica 74mm)</button>
+        <button class="secondary" id="print-a4-btn" style="flex:1">Imprimir (A4)</button>
+        <button class="primary" id="receipt-close-btn">Fechar</button>
+      </div>
+    </div>
+  </div>
+
 <script src="/static/js/auth.js"></script>
 <script>
 let cart = [];
 let selectedProduct = null;
+let selectedCustomerId = null;
 
 function fmtMoney(v) {
   return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -278,6 +313,32 @@ function renderCart() {
   document.getElementById('cart-total-value').textContent = fmtMoney(total);
 }
 
+let customerSearchTimeout;
+document.getElementById('customer-name').addEventListener('input', (e) => {
+  selectedCustomerId = null;
+  clearTimeout(customerSearchTimeout);
+  const q = e.target.value.trim();
+  const resultsEl = document.getElementById('customer-results');
+  if (q.length < 2) { resultsEl.innerHTML = ''; return; }
+  customerSearchTimeout = setTimeout(async () => {
+    const resp = await fetch('/api/customers?q=' + encodeURIComponent(q));
+    const data = await resp.json();
+    resultsEl.innerHTML = data.customers.map(c => `
+      <div class="search-result" data-id="${c.id}" data-name="${c.name}">
+        <span>${c.name}</span>
+        <span style="color:var(--muted)">${c.phone || c.document || ''}</span>
+      </div>
+    `).join('');
+    resultsEl.querySelectorAll('.search-result').forEach(el => {
+      el.addEventListener('click', () => {
+        selectedCustomerId = parseInt(el.dataset.id);
+        document.getElementById('customer-name').value = el.dataset.name;
+        resultsEl.innerHTML = '';
+      });
+    });
+  }, 250);
+});
+
 document.getElementById('finalize-btn').addEventListener('click', async () => {
   if (cart.length === 0) { showAlert('Adicione ao menos um item.'); return; }
   const total = cart.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
@@ -287,6 +348,7 @@ document.getElementById('finalize-btn').addEventListener('click', async () => {
     items: cart.map(i => ({ product_id: i.product_id, unit: i.unit, quantity: i.quantity, unit_price: i.unit_price })),
     payments: [{ method: document.getElementById('payment-method').value, amount: total.toFixed(2) }],
     customer_name: document.getElementById('customer-name').value || null,
+    customer_id: selectedCustomerId,
   };
 
   const resp = await fetch('/api/pdv/sales', {
@@ -300,6 +362,54 @@ document.getElementById('finalize-btn').addEventListener('click', async () => {
   cart = [];
   renderCart();
   document.getElementById('customer-name').value = '';
+  selectedCustomerId = null;
+
+  await showReceipt(data.sale.id);
+});
+
+async function showReceipt(saleId) {
+  const resp = await fetch('/api/pdv/sales/' + saleId);
+  const data = await resp.json();
+  if (!resp.ok) return;
+  const sale = data.sale;
+
+  const itemsHtml = sale.items.map(i => `
+    <div class="row"><span>${i.quantity} ${i.unit} x ${i.product_name}</span><span>${fmtMoney(i.total)}</span></div>
+  `).join('');
+  const paymentsHtml = sale.payments.map(p => `
+    <div class="row"><span>${p.method}</span><span>${fmtMoney(p.amount)}</span></div>
+  `).join('');
+
+  document.getElementById('receipt-content').innerHTML = `
+    <div style="text-align:center; margin-bottom:10px">
+      <strong>F.I Construção</strong><br>
+      <span style="color:var(--muted); font-size:.8rem">Comprovante de venda #${sale.id}</span>
+    </div>
+    <div class="row"><span>Data</span><span>${new Date(sale.created_at).toLocaleString('pt-BR')}</span></div>
+    ${sale.customer_name ? `<div class="row"><span>Cliente</span><span>${sale.customer_name}</span></div>` : ''}
+    <hr>
+    ${itemsHtml}
+    <hr>
+    <div class="row total-row"><span>Total</span><span>${fmtMoney(sale.total)}</span></div>
+    <hr>
+    <div style="font-weight:600; margin-bottom:4px">Pagamento</div>
+    ${paymentsHtml}
+    <div style="text-align:center; margin-top:14px; color:var(--muted); font-size:.75rem">Obrigado pela preferência!</div>
+  `;
+  document.getElementById('receipt-content').classList.remove('thermal');
+  document.getElementById('receipt-overlay').hidden = false;
+}
+
+document.getElementById('receipt-close-btn').addEventListener('click', () => {
+  document.getElementById('receipt-overlay').hidden = true;
+});
+document.getElementById('print-thermal-btn').addEventListener('click', () => {
+  document.getElementById('receipt-content').classList.add('thermal');
+  window.print();
+});
+document.getElementById('print-a4-btn').addEventListener('click', () => {
+  document.getElementById('receipt-content').classList.remove('thermal');
+  window.print();
 });
 
 checkCashSession();

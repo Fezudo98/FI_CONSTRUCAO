@@ -24,7 +24,7 @@ _NEXT_STATUS = {
 
 
 def create_order(company_id, user_id, customer_name, items, location_id, is_delivery=False,
-                  quote_id=None) -> Order:
+                  quote_id=None, customer_id=None) -> Order:
     if not items:
         raise ServiceError("O pedido precisa ter ao menos um item.")
 
@@ -33,6 +33,7 @@ def create_order(company_id, user_id, customer_name, items, location_id, is_deli
         quote_id=quote_id,
         created_by_id=user_id,
         location_id=location_id,
+        customer_id=customer_id,
         customer_name=customer_name,
         status=ORDER_RESERVED,
         total=Decimal(0),

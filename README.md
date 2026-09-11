@@ -12,7 +12,11 @@ apenas com um navegador.
 
 ## Estado atual da implementação
 
-✅ **Pronto e testado** (20 testes automatizados, todos os fluxos validados no
+Alguns módulos foram adaptados do **PUMA Commerce Core** (base interna de
+e-commerce/PDV da Puma Systems), simplificados para o contexto de um depósito
+B2B/balcão (sem loja virtual, cupons ou integrações de pagamento online).
+
+✅ **Pronto e testado** (28 testes automatizados, todos os fluxos validados no
 navegador de ponta a ponta):
 - Autenticação (login/logout por sessão), papéis e permissões.
 - Catálogo de produtos com conversão de unidades (ex.: 1 pallet = 40 unidades).
@@ -31,6 +35,20 @@ navegador de ponta a ponta):
   fluxo agendado → em rota → concluída (marca o pedido como entregue
   automaticamente), registro de ocorrências.
 - Modelo de dados completo para multiempresa/filial e permissões por papel.
+- **Clientes (CRM)**: cadastro com endereço, busca rápida (usada no PDV,
+  orçamentos e pedidos), exclusão segura — apaga de verdade só quem nunca
+  teve movimento; quem já comprou é apenas inativado, preservando o histórico.
+- **Alertas de estoque baixo**: `min_stock` por produto, card no Painel e
+  endpoint dedicado (`/api/reports/low-stock`).
+- **Recibo de venda**: modal de impressão no PDV após cada venda, com dois
+  formatos — bobina térmica 74mm e A4 — via CSS `@media print`.
+- **Relatórios** (`/relatorios.html`): receita, ticket médio, lucro bruto,
+  gráfico de vendas no período, ranking de produtos e formas de pagamento
+  (Chart.js servido localmente — funciona sem internet).
+- **Auditoria**: log das ações sensíveis (venda registrada, caixa
+  aberto/fechado, produto criado, estoque ajustado, cliente criado/editado),
+  consultável em Operação → Auditoria (admin).
+- **Código de barras**: geração sob demanda (Code128/SVG) a partir do SKU.
 
 🚧 **Pendente** (fora do escopo desta entrega):
 - Endpoint de licenciamento na VPS (o script `check_license.py` já existe e
@@ -123,8 +141,9 @@ app/routes/web.py      serve as páginas do frontend
 frontend/index.html    painel executivo (módulos)
 frontend/login.html    tela de login
 frontend/pdv.html      frente de caixa
-frontend/operacao.html retaguarda: estoque, orçamentos, pedidos, compras,
-                        financeiro e entregas
+frontend/operacao.html retaguarda: estoque, clientes, orçamentos, pedidos,
+                        compras, financeiro, entregas e auditoria
+frontend/relatorios.html vendas, ranking de produtos e formas de pagamento
 migrations/            evolução versionada do banco (Alembic)
 scripts/                bootstrap_database.py, check_license.py
 iniciar_sistema.bat    inicialização de produção (update + licença + start)

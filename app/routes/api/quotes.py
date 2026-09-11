@@ -13,6 +13,7 @@ bp = Blueprint("api_quotes", __name__, url_prefix="/api/quotes")
 def _serialize(q: Quote):
     return {
         "id": q.id,
+        "customer_id": q.customer_id,
         "customer_name": q.customer_name,
         "customer_document": q.customer_document,
         "customer_phone": q.customer_phone,
@@ -57,6 +58,7 @@ def create_quote():
             data.get("items", []),
             customer_document=data.get("customer_document"),
             customer_phone=data.get("customer_phone"),
+            customer_id=data.get("customer_id"),
         )
         db.session.commit()
     except ServiceError as exc:

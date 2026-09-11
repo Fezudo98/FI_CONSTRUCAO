@@ -4,6 +4,7 @@ from app.extensions import db
 from app.models.catalog import Product
 from app.models.inventory import StockLocation, StockBalance
 from app.services import inventory
+from app.services.audit import log_action
 from app.services.auth import login_required, permission_required, current_user
 from app.services.permissions import PERM_ESTOQUE_VER, PERM_ESTOQUE_AJUSTAR
 from app.services.errors import ServiceError
@@ -78,6 +79,10 @@ def adjust():
             lot_id=data.get("lot_id"),
             note=data.get("note"),
             user_id=user.id,
+        )
+        log_action(
+            user.company_id, user, "estoque.ajustado",
+            f"{product.sku}: novo saldo {data['new_quantity']} (endereço #{data['location_id']})",
         )
         db.session.commit()
     except ServiceError as exc:

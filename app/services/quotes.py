@@ -9,13 +9,14 @@ from app.services import orders as orders_service
 
 
 def create_quote(company_id, user_id, customer_name, items, customer_document=None,
-                  customer_phone=None, valid_until=None) -> Quote:
+                  customer_phone=None, valid_until=None, customer_id=None) -> Quote:
     if not items:
         raise ServiceError("O orçamento precisa ter ao menos um item.")
 
     quote = Quote(
         company_id=company_id,
         created_by_id=user_id,
+        customer_id=customer_id,
         customer_name=customer_name,
         customer_document=customer_document,
         customer_phone=customer_phone,
@@ -85,7 +86,7 @@ def convert_quote_to_order(quote: Quote, user_id, location_id, is_delivery=False
     ]
     order = orders_service.create_order(
         quote.company_id, user_id, quote.customer_name, items, location_id,
-        is_delivery=is_delivery, quote_id=quote.id,
+        is_delivery=is_delivery, quote_id=quote.id, customer_id=quote.customer_id,
     )
     quote.status = QUOTE_CONVERTED
     return order

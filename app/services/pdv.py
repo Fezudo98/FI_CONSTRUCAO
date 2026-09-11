@@ -43,7 +43,7 @@ def get_open_cash_session(company_id) -> CashSession | None:
 
 
 def create_sale(company_id, user_id, cash_session_id, default_location_id, items, payments,
-                 customer_name=None, customer_document=None) -> Sale:
+                 customer_name=None, customer_document=None, customer_id=None) -> Sale:
     """items: lista de {product_id, unit, quantity, unit_price}
     payments: lista de {method, amount}
     Dá baixa no estoque (default_location_id) e registra a venda."""
@@ -54,6 +54,7 @@ def create_sale(company_id, user_id, cash_session_id, default_location_id, items
         company_id=company_id,
         cash_session_id=cash_session_id,
         created_by_id=user_id,
+        customer_id=customer_id,
         customer_name=customer_name,
         customer_document=customer_document,
         total=Decimal(0),

@@ -32,6 +32,7 @@ class Config:
     CORS_ORIGINS = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
 
     UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", os.path.join(os.getcwd(), "uploads"))
+    BARCODE_FOLDER = os.environ.get("BARCODE_FOLDER", os.path.join(os.getcwd(), "barcodes"))
 
     LICENSE_KEY = os.environ.get("LICENSE_KEY", "")
     LICENSE_CHECK_URL = os.environ.get("LICENSE_CHECK_URL", "")

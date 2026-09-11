@@ -1,4 +1,7 @@
-from app.routes.api import auth, catalog, inventory, pdv, quotes, orders, purchasing, finance, logistics
+from app.routes.api import (
+    auth, catalog, inventory, pdv, quotes, orders, purchasing, finance, logistics,
+    customers, reports, audit,
+)
 
 
 def register_api(app):
@@ -11,3 +14,6 @@ def register_api(app):
     app.register_blueprint(purchasing.bp)
     app.register_blueprint(finance.bp)
     app.register_blueprint(logistics.bp)
+    app.register_blueprint(customers.bp)
+    app.register_blueprint(reports.bp)
+    app.register_blueprint(audit.bp)
