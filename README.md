@@ -16,7 +16,7 @@ Alguns módulos foram adaptados do **PUMA Commerce Core** (base interna de
 e-commerce/PDV da Puma Systems), simplificados para o contexto de um depósito
 B2B/balcão (sem loja virtual, cupons ou integrações de pagamento online).
 
-✅ **Pronto e testado** (28 testes automatizados, todos os fluxos validados no
+✅ **Pronto e testado** (35 testes automatizados, todos os fluxos validados no
 navegador de ponta a ponta):
 - Autenticação (login/logout por sessão), papéis e permissões.
 - Catálogo de produtos com conversão de unidades (ex.: 1 pallet = 40 unidades).
@@ -48,7 +48,15 @@ navegador de ponta a ponta):
 - **Auditoria**: log das ações sensíveis (venda registrada, caixa
   aberto/fechado, produto criado, estoque ajustado, cliente criado/editado),
   consultável em Operação → Auditoria (admin).
-- **Código de barras**: geração sob demanda (Code128/SVG) a partir do SKU.
+- **Código de barras**: geração sob demanda (Code128/SVG) a partir do SKU, ou
+  cadastro do código já impresso pelo fabricante.
+- **Imagem por produto**: upload (JPG/PNG/WEBP, até 5MB) exibida no cadastro
+  e no PDV ao selecionar o item.
+- **Leitor de código de barras**: funciona por ser HID (o leitor "digita" o
+  código + Enter, como um teclado — não precisa de driver). No PDV, escanear
+  e apertar Enter adiciona 1 unidade direto no carrinho. No ajuste de
+  estoque, escanear seleciona o produto automaticamente e foca o campo de
+  quantidade, para gravação rápida de saldo.
 
 🚧 **Pendente** (fora do escopo desta entrega):
 - Endpoint de licenciamento na VPS (o script `check_license.py` já existe e

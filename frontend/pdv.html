@@ -20,6 +20,7 @@
     position: fixed; inset: 0; background: rgba(10,15,30,.55); display: flex;
     align-items: center; justify-content: center; z-index: 100; padding: 16px;
   }
+  #receipt-overlay[hidden] { display: none; }
   #receipt-modal { background: #fff; border-radius: 12px; max-width: 420px; width: 100%; max-height: 90vh; overflow-y: auto; }
   #receipt-content { padding: 20px; font-size: .85rem; }
   #receipt-content .row { display: flex; justify-content: space-between; padding: 2px 0; }
@@ -75,9 +76,13 @@
           <div class="card">
             <h2>Buscar produto</h2>
             <input type="text" id="search-input" placeholder="Nome, SKU ou código de barras...">
+            <p class="muted" style="margin:6px 0 0">📷 Com o leitor: escaneie e pressione Enter para adicionar direto (1 unidade).</p>
             <div id="search-results"></div>
             <div id="add-item-form" class="card" style="margin-top:12px; background:#F4F6FB" hidden>
-              <div id="add-item-name" style="font-weight:600; margin-bottom:10px"></div>
+              <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px">
+                <img id="add-item-image" src="" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:8px;display:none">
+                <div id="add-item-name" style="font-weight:600"></div>
+              </div>
               <div class="grid grid-2">
                 <div>
                   <label>Unidade</label>
@@ -250,9 +255,35 @@ document.getElementById('search-input').addEventListener('input', (e) => {
   }, 250);
 });
 
+// Leitor de codigo de barras: o leitor "digita" o codigo e envia Enter em
+// seguida. Ao apertar Enter, tenta um match exato (SKU ou codigo de barras)
+// e ja adiciona 1 unidade direto no carrinho — sem abrir o formulario,
+// para agilizar a venda no balcao.
+document.getElementById('search-input').addEventListener('keydown', async (e) => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  clearTimeout(searchTimeout);
+  const code = e.target.value.trim();
+  if (!code) return;
+
+  const resp = await fetch('/api/products/lookup?code=' + encodeURIComponent(code));
+  const data = await resp.json();
+  if (!resp.ok) { showAlert(data.error); return; }
+
+  cart.push({ product_id: data.product.id, name: data.product.name, unit: data.product.base_unit, quantity: 1, unit_price: parseFloat(data.product.sale_price) });
+  renderCart();
+  showAlert(`+1 ${data.product.base_unit} ${data.product.name}`, true);
+  e.target.value = '';
+  document.getElementById('search-results').innerHTML = '';
+});
+
 function openAddItemForm(product) {
   selectedProduct = product;
   document.getElementById('add-item-name').textContent = product.name + ' — ' + fmtMoney(product.sale_price) + ' / ' + product.base_unit;
+
+  const imageEl = document.getElementById('add-item-image');
+  if (product.image_url) { imageEl.src = product.image_url; imageEl.style.display = 'block'; }
+  else { imageEl.style.display = 'none'; }
 
   const unitSelect = document.getElementById('add-item-unit');
   const units = [product.base_unit, ...product.conversions.map(c => c.unit)];

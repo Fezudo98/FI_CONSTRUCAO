@@ -17,6 +17,7 @@ class Product(db.Model, TimestampMixin, SoftDeleteMixin):
     cost_price = db.Column(db.Numeric(12, 4), nullable=False, default=0)
     sale_price = db.Column(db.Numeric(12, 4), nullable=False, default=0)
     min_stock = db.Column(db.Numeric(12, 4), nullable=False, default=0)
+    image_filename = db.Column(db.String(120))
 
     conversions = db.relationship(
         "UnitConversion", back_populates="product", cascade="all, delete-orphan"
