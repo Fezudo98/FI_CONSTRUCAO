@@ -57,14 +57,14 @@
     <!-- Caixa fechado -->
     <div id="cash-closed-card" class="card" hidden>
       <h1>Abrir caixa</h1>
-      <p style="color:var(--muted)">É preciso abrir o caixa antes de iniciar as vendas.</p>
-      <div class="grid grid-2" style="max-width:400px">
+      <p class="muted cash-note">É preciso abrir o caixa antes de iniciar as vendas.</p>
+      <div class="grid grid-2 opening-grid">
         <div>
           <label>Valor de abertura (R$)</label>
           <input type="number" id="opening-amount" step="0.01" value="0">
         </div>
       </div>
-      <button class="primary" id="open-cash-btn" style="margin-top:12px">Abrir caixa</button>
+      <div class="button-row"><button class="primary" id="open-cash-btn">Abrir caixa</button></div>
     </div>
 
     <!-- PDV -->
@@ -74,12 +74,12 @@
           <div class="card">
             <h2>Buscar produto</h2>
             <input type="text" id="search-input" placeholder="Nome, SKU ou código de barras...">
-            <p class="muted" style="margin:6px 0 0">📷 Com o leitor: escaneie e pressione Enter para adicionar direto (1 unidade).</p>
+            <p class="muted scanner-hint">Com o leitor: escaneie e pressione Enter para adicionar direto (1 unidade).</p>
             <div id="search-results"></div>
-            <div id="add-item-form" class="card" style="margin-top:12px; background:#F4F6FB" hidden>
-              <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px">
-                <img id="add-item-image" src="" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:8px;display:none">
-                <div id="add-item-name" style="font-weight:600"></div>
+            <div id="add-item-form" class="card add-item-card" hidden>
+              <div class="product-preview">
+                <img id="add-item-image" src="" alt="" class="product-preview-image">
+                <div id="add-item-name" class="product-preview-name"></div>
               </div>
               <div class="grid grid-2">
                 <div>
@@ -91,8 +91,8 @@
                   <input type="number" id="add-item-qty" step="0.01" value="1" min="0.01">
                 </div>
               </div>
-              <div style="display:flex; gap:8px; margin-top:12px">
-                <button class="primary" id="add-item-confirm" style="flex:1">Adicionar ao carrinho</button>
+              <div class="button-row">
+                <button class="primary grow" id="add-item-confirm">Adicionar ao carrinho</button>
                 <button class="secondary" id="add-item-cancel">Cancelar</button>
               </div>
             </div>
@@ -112,12 +112,12 @@
             <span id="cart-total-value">R$ 0,00</span>
           </div>
 
-          <div style="margin-top:16px">
+          <div class="checkout-field checkout-field-first">
             <label>Cliente (opcional)</label>
             <input type="text" id="customer-name" placeholder="Nome do cliente ou buscar cadastrado...">
             <div id="customer-results"></div>
           </div>
-          <div style="margin-top:10px">
+          <div class="checkout-field">
             <label>Forma de pagamento</label>
             <select id="payment-method">
               <option value="dinheiro">Dinheiro</option>
@@ -133,14 +133,14 @@
             <input type="text" id="card-reference" placeholder="Ex.: 123456">
           </div>
 
-          <button class="primary" id="finalize-btn" style="width:100%; margin-top:14px">Finalizar venda</button>
-          <button class="secondary" id="close-cash-btn" style="width:100%; margin-top:8px">Fechar caixa</button>
+          <button class="primary checkout-action" id="finalize-btn">Finalizar venda</button>
+          <button class="secondary checkout-action" id="close-cash-btn">Fechar caixa</button>
 
-          <div id="close-cash-form" style="margin-top:12px" hidden>
+          <div id="close-cash-form" class="close-cash-form" hidden>
             <label>Valor de fechamento (R$)</label>
             <input type="number" id="closing-amount" step="0.01" value="0">
-            <div style="display:flex; gap:8px; margin-top:10px">
-              <button class="primary" id="close-cash-confirm" style="flex:1">Confirmar fechamento</button>
+            <div class="button-row">
+              <button class="primary grow" id="close-cash-confirm">Confirmar fechamento</button>
               <button class="secondary" id="close-cash-cancel">Cancelar</button>
             </div>
           </div>
@@ -156,8 +156,8 @@
     <div id="receipt-modal">
       <div id="receipt-content"></div>
       <div id="receipt-actions">
-        <button class="secondary" id="print-thermal-btn" style="flex:1">Imprimir (térmica 74mm)</button>
-        <button class="secondary" id="print-a4-btn" style="flex:1">Imprimir (A4)</button>
+        <button class="secondary grow" id="print-thermal-btn">Imprimir (térmica 74mm)</button>
+        <button class="secondary grow" id="print-a4-btn">Imprimir (A4)</button>
         <button class="primary" id="receipt-close-btn">Fechar</button>
       </div>
     </div>

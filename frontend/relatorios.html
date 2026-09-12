@@ -29,11 +29,11 @@
     <div id="report-status" class="alert" role="status" aria-live="polite" hidden></div>
     <div class="card">
       <h2>Período</h2>
-      <div class="grid grid-2" style="max-width:420px">
+      <div class="grid grid-2 period-grid">
         <div><label>De</label><input type="date" id="date-start"></div>
         <div><label>Até</label><input type="date" id="date-end"></div>
       </div>
-      <button class="primary" id="apply-filter-btn" style="margin-top:12px">Aplicar</button>
+      <div class="button-row"><button class="primary" id="apply-filter-btn">Aplicar</button></div>
     </div>
 
     <div class="card">
@@ -43,7 +43,7 @@
         <div class="kpi"><div class="value" id="kpi-ticket">R$ 0,00</div><div class="label">Ticket médio</div></div>
         <div class="kpi"><div class="value" id="kpi-profit">R$ 0,00</div><div class="label">Lucro bruto*</div></div>
       </div>
-      <p class="muted" style="margin-top:10px">*Lucro bruto calculado com o custo atual do produto, não o custo histórico no momento da venda.</p>
+      <p class="muted report-note">*Lucro bruto calculado com o custo atual do produto, não o custo histórico no momento da venda.</p>
     </div>
 
     <div class="charts-grid">
@@ -59,7 +59,7 @@
 
     <div class="card">
       <h2>Produtos mais vendidos</h2>
-      <div class="chart-wrap" style="height:320px"><canvas id="products-chart"></canvas></div>
+      <div class="chart-wrap chart-wrap-tall"><canvas id="products-chart"></canvas></div>
     </div>
   </main>
 
