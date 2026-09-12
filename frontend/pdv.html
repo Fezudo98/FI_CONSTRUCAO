@@ -32,7 +32,7 @@
   }
 </style>
 </head>
-<body>
+<body class="pdv-page">
   <aside class="sidebar" id="main-nav"><a class="sidebar-brand" href="/index.html"><img src="/static/img/logo.jpg" alt=""><span><strong>F.I Construção</strong><small>Gestão do depósito</small></span></a><nav class="sidebar-nav" aria-label="Principal"><a href="/index.html"><span class="nav-icon" data-icon="panel"></span>Painel</a><a href="/pdv.html" class="active" aria-current="page"><span class="nav-icon" data-icon="sale"></span>PDV</a><a href="/operacao.html"><span class="nav-icon" data-icon="operation"></span>Operação</a><a href="/relatorios.html"><span class="nav-icon" data-icon="report"></span>Relatórios</a></nav><div class="sidebar-foot">Operação local e segura</div></aside>
   <div class="sidebar-scrim" hidden></div>
   <div class="topbar">
@@ -51,7 +51,15 @@
   </div>
 
   <main>
-    <header class="page-head"><div class="page-head-copy"><h1>PDV</h1><p>Venda rápida com busca, leitor de código de barras e baixa automática.</p></div></header>
+    <header class="page-head pdv-head"><div class="page-head-copy"><span class="eyebrow">Frente de caixa</span><h1>PDV</h1><p>Venda rápida com busca, leitor de código de barras e baixa automática.</p></div><div class="pdv-session-status" id="pdv-session-status" aria-live="polite"><span></span> Verificando caixa</div></header>
+    <nav class="pdv-shortcuts" aria-label="Atalhos do PDV">
+      <a href="/index.html"><kbd>F1</kbd><span>Início</span></a>
+      <button type="button" data-pdv-action="search"><kbd>F2</kbd><span>Buscar</span></button>
+      <a href="/operacao.html"><kbd>F3</kbd><span>Operação</span></a>
+      <a href="/relatorios.html"><kbd>F4</kbd><span>Relatórios</span></a>
+      <button type="button" data-pdv-action="finalize"><kbd>F6</kbd><span>Finalizar</span></button>
+      <button type="button" data-pdv-action="cart"><kbd>F8</kbd><span>Carrinho</span></button>
+    </nav>
     <div id="alert" class="alert err" hidden></div>
 
     <!-- Caixa fechado -->
@@ -104,7 +112,7 @@
           </div>
         </div>
 
-        <div class="card pdv-cart" id="pdv-cart-panel" aria-labelledby="cart-title">
+        <div class="card pdv-cart" id="pdv-cart-panel" aria-labelledby="cart-title" tabindex="-1">
           <div class="panel-head"><h2 id="cart-title">Carrinho</h2><button type="button" class="secondary cart-close" id="cart-close-btn">Continuar venda</button></div>
           <div id="cart-items"><p style="color:var(--muted); font-size:.85rem">Nenhum item ainda.</p></div>
           <div class="cart-total">

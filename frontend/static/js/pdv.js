@@ -31,13 +31,18 @@ async function loadLocations() {
 async function checkCashSession() {
   const resp = await fetch('/api/pdv/cash-session');
   const data = await resp.json();
+  const status = document.getElementById('pdv-session-status');
   if (data.cash_session) {
     document.getElementById('cash-closed-card').hidden = true;
     document.getElementById('pdv-card').hidden = false;
+    status.classList.add('is-open');
+    status.innerHTML = '<span></span> Caixa aberto';
     await loadLocations();
   } else {
     document.getElementById('cash-closed-card').hidden = false;
     document.getElementById('pdv-card').hidden = true;
+    status.classList.remove('is-open');
+    status.innerHTML = '<span></span> Caixa fechado';
   }
 }
 
@@ -201,7 +206,54 @@ function setMobileCart(open) {
 document.getElementById('mobile-cart-trigger').addEventListener('click', () => setMobileCart(true));
 document.getElementById('cart-close-btn').addEventListener('click', () => setMobileCart(false));
 document.getElementById('cart-scrim').addEventListener('click', () => setMobileCart(false));
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('cart-open')) setMobileCart(false); });
+
+function focusCart() {
+  if (window.matchMedia('(max-width: 820px)').matches) {
+    setMobileCart(true);
+    return;
+  }
+  const panel = document.getElementById('pdv-cart-panel');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  panel.focus({ preventScroll: true });
+}
+
+function isPdvOpen() {
+  return !document.getElementById('pdv-card').hidden;
+}
+
+function runPdvAction(action) {
+  if (action === 'search' && isPdvOpen()) document.getElementById('search-input').focus();
+  if (action === 'finalize' && isPdvOpen()) document.getElementById('finalize-btn').click();
+  if (action === 'cart' && isPdvOpen()) focusCart();
+}
+
+document.querySelectorAll('[data-pdv-action]').forEach(button => {
+  button.addEventListener('click', () => runPdvAction(button.dataset.pdvAction));
+});
+
+document.addEventListener('keydown', event => {
+  if (event.ctrlKey || event.altKey || event.metaKey) return;
+  const routes = { F1: '/index.html', F3: '/operacao.html', F4: '/relatorios.html' };
+  if (routes[event.key]) {
+    event.preventDefault();
+    window.location.assign(routes[event.key]);
+    return;
+  }
+  if (['F2', 'F6', 'F8'].includes(event.key)) {
+    event.preventDefault();
+    runPdvAction({ F2: 'search', F6: 'finalize', F8: 'cart' }[event.key]);
+    return;
+  }
+  if (event.key !== 'Escape') return;
+  if (document.body.classList.contains('cart-open')) {
+    setMobileCart(false);
+  } else if (!document.getElementById('add-item-form').hidden) {
+    closeAddItemForm();
+  } else if (!document.getElementById('close-cash-form').hidden) {
+    document.getElementById('close-cash-form').hidden = true;
+    document.getElementById('search-input').focus();
+  }
+});
 
 let customerSearchTimeout;
 document.getElementById('customer-name').addEventListener('input', (e) => {
