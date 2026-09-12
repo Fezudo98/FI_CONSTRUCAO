@@ -83,25 +83,63 @@ document.getElementById('close-cash-confirm').addEventListener('click', async ()
 });
 
 let searchTimeout;
-document.getElementById('search-input').addEventListener('input', (e) => {
-  clearTimeout(searchTimeout);
-  const q = e.target.value.trim();
+let scanStartedAt = 0;
+let lastInputAt = 0;
+let lookupInFlight = false;
+
+async function searchProducts(q) {
+  const resp = await fetch('/api/products?q=' + encodeURIComponent(q));
+  const data = await resp.json();
   const resultsEl = document.getElementById('search-results');
-  if (!q) { resultsEl.innerHTML = ''; return; }
-  searchTimeout = setTimeout(async () => {
-    const resp = await fetch('/api/products?q=' + encodeURIComponent(q));
-    const data = await resp.json();
-    resultsEl.innerHTML = data.products.map(p => `
+  if (document.getElementById('search-input').value.trim() !== q) return;
+  resultsEl.innerHTML = data.products.map(p => `
       <div class="search-result" data-id="${p.id}">
         <span>${escapeHtml(p.name)} <span style="color:var(--muted)">(${escapeHtml(p.sku)})</span></span>
         <span>${fmtMoney(p.sale_price)} / ${escapeHtml(p.base_unit)}</span>
       </div>
-    `).join('') || '<div style="padding:10px;color:var(--muted)">Nenhum produto encontrado.</div>';
+  `).join('') || '<div style="padding:10px;color:var(--muted)">Nenhum produto encontrado.</div>';
 
-    resultsEl.querySelectorAll('.search-result').forEach(el => {
-      el.addEventListener('click', () => openAddItemForm(data.products.find(p => p.id == el.dataset.id)));
-    });
-  }, 250);
+  resultsEl.querySelectorAll('.search-result').forEach(el => {
+    el.addEventListener('click', () => openAddItemForm(data.products.find(p => p.id == el.dataset.id)));
+  });
+}
+
+async function addScannedProduct(code, showFailure = false) {
+  if (lookupInFlight || !code) return false;
+  lookupInFlight = true;
+  try {
+    const resp = await fetch('/api/products/lookup?code=' + encodeURIComponent(code));
+    const data = await resp.json();
+    if (!resp.ok) {
+      if (showFailure) showAlert(data.error);
+      return false;
+    }
+    cart.push({ product_id: data.product.id, name: data.product.name, unit: data.product.base_unit, quantity: 1, unit_price: parseFloat(data.product.sale_price) });
+    renderCart();
+    showAlert(`+1 ${data.product.base_unit} ${data.product.name}`, true);
+    const input = document.getElementById('search-input');
+    if (input.value.trim() === code) input.value = '';
+    document.getElementById('search-results').innerHTML = '';
+    input.focus();
+    return true;
+  } finally {
+    lookupInFlight = false;
+  }
+}
+
+document.getElementById('search-input').addEventListener('input', (e) => {
+  clearTimeout(searchTimeout);
+  const q = e.target.value.trim();
+  const resultsEl = document.getElementById('search-results');
+  const now = Date.now();
+  if (!q) { scanStartedAt = 0; resultsEl.innerHTML = ''; return; }
+  if (!lastInputAt || now - lastInputAt > 180) scanStartedAt = now;
+  lastInputAt = now;
+  searchTimeout = setTimeout(async () => {
+    const isScannerSequence = q.length >= 4 && Date.now() - scanStartedAt < Math.max(650, q.length * 75);
+    if (isScannerSequence && await addScannedProduct(q)) return;
+    searchProducts(q);
+  }, 170);
 });
 
 // Leitor de codigo de barras: o leitor "digita" o codigo e envia Enter em
@@ -114,16 +152,7 @@ document.getElementById('search-input').addEventListener('keydown', async (e) =>
   clearTimeout(searchTimeout);
   const code = e.target.value.trim();
   if (!code) return;
-
-  const resp = await fetch('/api/products/lookup?code=' + encodeURIComponent(code));
-  const data = await resp.json();
-  if (!resp.ok) { showAlert(data.error); return; }
-
-  cart.push({ product_id: data.product.id, name: data.product.name, unit: data.product.base_unit, quantity: 1, unit_price: parseFloat(data.product.sale_price) });
-  renderCart();
-  showAlert(`+1 ${data.product.base_unit} ${data.product.name}`, true);
-  e.target.value = '';
-  document.getElementById('search-results').innerHTML = '';
+  await addScannedProduct(code, true);
 });
 
 function openAddItemForm(product) {
