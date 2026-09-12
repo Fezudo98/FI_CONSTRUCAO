@@ -98,7 +98,37 @@ de um navegador).
    atualizações do repositório, instala dependências novas se existirem,
    aplica migrações pendentes, verifica a licença e inicia o servidor,
    abrindo o navegador automaticamente. Para proteger os dados, ele para se
-   detectar alterações locais não versionadas.
+   detectar alterações locais não versionadas. Em produção o servidor é o
+   **Waitress** (WSGI de verdade, multi-thread), não o servidor de
+   desenvolvimento do Flask.
+6. Rode `agendar_backup.bat` uma vez para agendar o backup diário do banco
+   (ver seção "Backup e restauração" abaixo). Sem isso, uma falha no disco
+   do PC-servidor apaga permanentemente vendas, estoque e financeiro.
+
+## Backup e restauração
+
+O backup é do banco PostgreSQL, não da pasta do sistema — os arquivos de
+código são recuperáveis pelo Git, os dados não.
+
+- **Agendar backup diário** (uma vez, após a instalação): `agendar_backup.bat`
+  — pergunta o horário e registra uma tarefa no Agendador de Tarefas do
+  Windows. Pode pedir para rodar como Administrador.
+- **Backup manual, a qualquer momento**: `backup_agora.bat`.
+- Os arquivos ficam em `backups/` (fora do Git), formato `.dump` do
+  `pg_dump`, com um backup por dia — mantidos por `BACKUP_RETENTION_DAYS`
+  dias (padrão 14; ajustável no `.env`).
+- Exige as ferramentas de linha de comando do PostgreSQL instaladas junto
+  com o servidor (`pg_dump`/`pg_restore`). Se não estiverem no PATH,
+  configure `PG_DUMP_PATH`/`PG_RESTORE_PATH` no `.env` apontando para a
+  pasta `bin` da instalação do PostgreSQL.
+- **Restaurar um backup** (substitui os dados atuais — peça confirmação
+  antes de rodar, isso é irreversível):
+  ```
+  .venv\Scripts\python.exe scripts\restore_database.py backups\fi_construcao_20260101_220000.dump
+  ```
+- Recomenda-se copiar periodicamente os arquivos de `backups/` para fora do
+  PC-servidor (pendrive, nuvem, outro computador) — um backup que mora no
+  mesmo disco que pode falhar não protege contra falha de disco.
 
 ## Acesso pelos outros computadores do depósito
 
@@ -164,10 +194,14 @@ frontend/operacao.html retaguarda: estoque, clientes, orçamentos, pedidos,
                         compras, financeiro, entregas e auditoria
 frontend/relatorios.html vendas, ranking de produtos e formas de pagamento
 migrations/            evolução versionada do banco (Alembic)
-scripts/                bootstrap_database.py, check_license.py
+scripts/                bootstrap_database.py, check_license.py,
+                        backup_database.py, restore_database.py,
+                        agendar_backup.ps1
 instalar_sistema.bat   instalação inicial (update + dependências + banco)
 iniciar_sistema.bat    inicialização diária (update + migrações + licença)
 atualizar.bat          só atualiza (git pull + migrações), sem iniciar
+agendar_backup.bat     agenda o backup diário do banco (Agendador de Tarefas)
+backup_agora.bat       roda um backup do banco na hora
 ```
 
 ## Segurança

@@ -10,4 +10,11 @@ app = create_app()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=app.config.get("DEBUG", False))
+    if app.config.get("DEBUG"):
+        app.run(host="0.0.0.0", port=port, debug=True)
+    else:
+        from waitress import serve  # noqa: E402
+
+        threads = int(os.environ.get("WAITRESS_THREADS", "8"))
+        print(f"Servindo em producao via Waitress em http://0.0.0.0:{port} ({threads} threads)")
+        serve(app, host="0.0.0.0", port=port, threads=threads)
