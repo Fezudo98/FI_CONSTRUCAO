@@ -12,7 +12,6 @@ class Payable(db.Model, TimestampMixin):
     __tablename__ = "payables"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"), nullable=False)
     purchase_order_id = db.Column(db.Integer, db.ForeignKey("purchase_orders.id"))
 

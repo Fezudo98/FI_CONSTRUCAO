@@ -76,3 +76,10 @@ def test_delivery_requires_is_delivery_order(auth_client):
     resp = auth_client.post("/api/logistics/deliveries", json={"order_id": order["id"], "address": "N/A"})
     assert resp.status_code == 400
     assert "não está marcado como entrega" in resp.get_json()["error"]
+
+
+def test_vehicle_and_driver_require_existing_carrier(auth_client):
+    vehicle = auth_client.post("/api/logistics/vehicles", json={"carrier_id": 9999, "plate": "AAA1A11"})
+    driver = auth_client.post("/api/logistics/drivers", json={"carrier_id": 9999, "name": "Motorista"})
+    assert vehicle.status_code == 404
+    assert driver.status_code == 404

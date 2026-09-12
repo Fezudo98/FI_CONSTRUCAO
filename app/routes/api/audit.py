@@ -14,7 +14,7 @@ def list_logs():
     page = request.args.get("page", 1, type=int)
     per_page = min(request.args.get("per_page", 50, type=int), 200)
 
-    query = AuditLog.query.filter_by(company_id=user.company_id).order_by(AuditLog.timestamp.desc())
+    query = AuditLog.query.order_by(AuditLog.timestamp.desc())
     total = query.count()
     logs = query.offset((page - 1) * per_page).limit(per_page).all()
 

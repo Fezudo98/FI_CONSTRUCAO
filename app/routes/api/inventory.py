@@ -16,7 +16,7 @@ bp = Blueprint("api_inventory", __name__, url_prefix="/api/inventory")
 @login_required
 def list_locations():
     user = current_user()
-    locations = StockLocation.query.filter_by(company_id=user.company_id).order_by(StockLocation.code).all()
+    locations = StockLocation.query.order_by(StockLocation.code).all()
     return jsonify({"locations": [{"id": l.id, "code": l.code, "description": l.description} for l in locations]})
 
 
@@ -28,7 +28,7 @@ def create_location():
     if not data.get("code"):
         return jsonify({"error": "Campo obrigatório: code"}), 400
 
-    location = StockLocation(company_id=user.company_id, code=data["code"], description=data.get("description"))
+    location = StockLocation(code=data["code"], description=data.get("description"))
     db.session.add(location)
     db.session.commit()
     return jsonify({"location": {"id": location.id, "code": location.code}}), 201
@@ -39,7 +39,7 @@ def create_location():
 def get_balance():
     user = current_user()
     product_id = request.args.get("product_id", type=int)
-    query = StockBalance.query.filter_by(company_id=user.company_id)
+    query = StockBalance.query
     if product_id:
         query = query.filter_by(product_id=product_id)
 
@@ -72,7 +72,6 @@ def adjust():
 
     try:
         balance = inventory.adjust_stock(
-            user.company_id,
             product,
             data["location_id"],
             data["new_quantity"],
@@ -81,7 +80,7 @@ def adjust():
             user_id=user.id,
         )
         log_action(
-            user.company_id, user, "estoque.ajustado",
+            user, "estoque.ajustado",
             f"{product.sku}: novo saldo {data['new_quantity']} (endereço #{data['location_id']})",
         )
         db.session.commit()

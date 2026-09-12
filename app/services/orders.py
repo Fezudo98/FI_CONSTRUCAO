@@ -23,13 +23,12 @@ _NEXT_STATUS = {
 }
 
 
-def create_order(company_id, user_id, customer_name, items, location_id, is_delivery=False,
+def create_order(user_id, customer_name, items, location_id, is_delivery=False,
                   quote_id=None, customer_id=None) -> Order:
     if not items:
         raise ServiceError("O pedido precisa ter ao menos um item.")
 
     order = Order(
-        company_id=company_id,
         quote_id=quote_id,
         created_by_id=user_id,
         location_id=location_id,
@@ -68,7 +67,7 @@ def create_order(company_id, user_id, customer_name, items, location_id, is_deli
 
         base_quantity = to_base_unit(product, item["unit"], quantity)
         inventory.reserve_stock(
-            company_id, product, location_id, base_quantity,
+            product, location_id, base_quantity,
             reference_type="order", reference_id=order.id, user_id=user_id,
         )
 
@@ -97,7 +96,7 @@ def advance_order_status(order: Order, user_id):
     if next_status == ORDER_PICKED_UP:
         for product, base_quantity in _order_base_quantities(order):
             inventory.fulfill_reservation(
-                order.company_id, product, order.location_id, base_quantity,
+                product, order.location_id, base_quantity,
                 reference_type="order", reference_id=order.id, user_id=user_id,
             )
 
@@ -114,7 +113,7 @@ def cancel_order(order: Order, user_id):
 
     for product, base_quantity in _order_base_quantities(order):
         inventory.release_reservation(
-            order.company_id, product, order.location_id, base_quantity,
+            product, order.location_id, base_quantity,
             reference_type="order", reference_id=order.id, user_id=user_id,
         )
 

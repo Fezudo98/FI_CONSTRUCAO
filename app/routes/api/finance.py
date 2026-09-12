@@ -29,7 +29,7 @@ def _serialize(p: Payable):
 def list_payables():
     user = current_user()
     status = request.args.get("status")
-    query = Payable.query.filter_by(company_id=user.company_id)
+    query = Payable.query
     if status:
         query = query.filter_by(status=status)
     payables = query.order_by(Payable.due_date).limit(200).all()
@@ -41,7 +41,7 @@ def list_payables():
 def settle_payable(payable_id):
     user = current_user()
     payable = db.session.get(Payable, payable_id)
-    if payable is None or payable.company_id != user.company_id:
+    if payable is None:
         return jsonify({"error": "Conta a pagar não encontrada."}), 404
 
     data = request.get_json(silent=True) or {}

@@ -15,7 +15,7 @@ bp = Blueprint("api_logistics", __name__, url_prefix="/api/logistics")
 @permission_required(PERM_ENTREGAS)
 def list_carriers():
     user = current_user()
-    carriers = Carrier.query.filter_by(company_id=user.company_id, is_active=True).order_by(Carrier.name).all()
+    carriers = Carrier.query.filter_by(is_active=True).order_by(Carrier.name).all()
     return jsonify({"carriers": [{"id": c.id, "name": c.name, "is_own_fleet": c.is_own_fleet} for c in carriers]})
 
 
@@ -26,7 +26,7 @@ def create_carrier():
     data = request.get_json(silent=True) or {}
     if not data.get("name"):
         return jsonify({"error": "Campo obrigatório: name"}), 400
-    carrier = Carrier(company_id=user.company_id, name=data["name"], is_own_fleet=data.get("is_own_fleet", True))
+    carrier = Carrier(name=data["name"], is_own_fleet=data.get("is_own_fleet", True))
     db.session.add(carrier)
     db.session.commit()
     return jsonify({"carrier": {"id": carrier.id, "name": carrier.name}}), 201
@@ -38,7 +38,7 @@ def list_vehicles():
     user = current_user()
     vehicles = (
         Vehicle.query.join(Carrier)
-        .filter(Carrier.company_id == user.company_id, Vehicle.is_active.is_(True))
+        .filter(Vehicle.is_active.is_(True))
         .order_by(Vehicle.plate)
         .all()
     )
@@ -51,6 +51,8 @@ def create_vehicle():
     data = request.get_json(silent=True) or {}
     if not data.get("carrier_id") or not data.get("plate"):
         return jsonify({"error": "Campos obrigatórios: carrier_id, plate"}), 400
+    if db.session.get(Carrier, data["carrier_id"]) is None:
+        return jsonify({"error": "Transportadora não encontrada."}), 404
     vehicle = Vehicle(carrier_id=data["carrier_id"], plate=data["plate"], model=data.get("model"))
     db.session.add(vehicle)
     db.session.commit()
@@ -63,7 +65,7 @@ def list_drivers():
     user = current_user()
     drivers = (
         Driver.query.join(Carrier)
-        .filter(Carrier.company_id == user.company_id, Driver.is_active.is_(True))
+        .filter(Driver.is_active.is_(True))
         .order_by(Driver.name)
         .all()
     )
@@ -76,6 +78,8 @@ def create_driver():
     data = request.get_json(silent=True) or {}
     if not data.get("carrier_id") or not data.get("name"):
         return jsonify({"error": "Campos obrigatórios: carrier_id, name"}), 400
+    if db.session.get(Carrier, data["carrier_id"]) is None:
+        return jsonify({"error": "Transportadora não encontrada."}), 404
     driver = Driver(carrier_id=data["carrier_id"], name=data["name"], phone=data.get("phone"))
     db.session.add(driver)
     db.session.commit()
@@ -103,7 +107,7 @@ def _serialize_delivery(d: Delivery):
 def list_deliveries():
     user = current_user()
     deliveries = (
-        Delivery.query.join(Order).filter(Order.company_id == user.company_id).order_by(Delivery.id.desc()).all()
+        Delivery.query.order_by(Delivery.id.desc()).all()
     )
     return jsonify({"deliveries": [_serialize_delivery(d) for d in deliveries]})
 
@@ -114,7 +118,7 @@ def create_delivery():
     user = current_user()
     data = request.get_json(silent=True) or {}
     order = db.session.get(Order, data.get("order_id"))
-    if order is None or order.company_id != user.company_id:
+    if order is None:
         return jsonify({"error": "Pedido não encontrado."}), 404
 
     try:
@@ -133,7 +137,7 @@ def create_delivery():
 def advance_delivery(delivery_id):
     user = current_user()
     delivery = db.session.get(Delivery, delivery_id)
-    if delivery is None or delivery.order.company_id != user.company_id:
+    if delivery is None:
         return jsonify({"error": "Entrega não encontrada."}), 404
     try:
         logistics_service.advance_delivery_status(delivery)
@@ -149,7 +153,7 @@ def advance_delivery(delivery_id):
 def add_occurrence(delivery_id):
     user = current_user()
     delivery = db.session.get(Delivery, delivery_id)
-    if delivery is None or delivery.order.company_id != user.company_id:
+    if delivery is None:
         return jsonify({"error": "Entrega não encontrada."}), 404
 
     data = request.get_json(silent=True) or {}

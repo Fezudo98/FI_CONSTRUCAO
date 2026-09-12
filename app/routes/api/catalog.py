@@ -77,9 +77,16 @@ def create_product():
         if not data.get(field):
             return jsonify({"error": f"Campo obrigatório: {field}"}), 400
 
+    sku = str(data["sku"]).strip()
+    barcode = str(data.get("barcode") or "").strip() or None
+    if Product.query.filter_by(sku=sku).first() is not None:
+        return jsonify({"error": "Já existe um produto com este SKU."}), 409
+    if barcode and Product.query.filter_by(barcode=barcode).first() is not None:
+        return jsonify({"error": "Já existe um produto com este código de barras."}), 409
+
     product = Product(
-        sku=data["sku"],
-        barcode=data.get("barcode"),
+        sku=sku,
+        barcode=barcode,
         name=data["name"],
         description=data.get("description"),
         category=data.get("category"),
@@ -100,7 +107,7 @@ def create_product():
             )
         )
 
-    log_action(current_user().company_id, current_user(), "produto.criado", f"{product.sku} - {product.name}")
+    log_action(current_user(), "produto.criado", f"{product.sku} - {product.name}")
     db.session.commit()
     return jsonify({"product": _serialize_product(product)}), 201
 
@@ -128,7 +135,7 @@ def upload_product_image(product_id):
     file_storage = request.files.get("image")
     try:
         product_image.save_product_image(product, file_storage)
-        log_action(current_user().company_id, current_user(), "produto.imagem_atualizada", product.sku)
+        log_action(current_user(), "produto.imagem_atualizada", product.sku)
         db.session.commit()
     except ServiceError as exc:
         db.session.rollback()

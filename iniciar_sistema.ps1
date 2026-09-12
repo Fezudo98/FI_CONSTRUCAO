@@ -27,6 +27,10 @@ try {
 
     if (-not (Test-Path '.venv\Scripts\python.exe')) { throw 'Sistema não instalado. Execute instalar_sistema.bat primeiro.' }
     if (-not (Test-Path '.env')) { throw 'Arquivo .env não encontrado. Execute instalar_sistema.bat para configurar esta máquina.' }
+    $envContent = Get-Content -Raw '.env'
+    if ($envContent -match 'SECRET_KEY=troque-por-uma-chave-aleatoria-longa') {
+        throw 'Configure uma SECRET_KEY exclusiva no arquivo .env antes de iniciar.'
+    }
 
     Sync-Repository
     $venvPython = Join-Path $PSScriptRoot '.venv\Scripts\python.exe'

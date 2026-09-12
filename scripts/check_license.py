@@ -6,9 +6,7 @@ Códigos de saída:
   0 = pode iniciar o sistema
   1 = bloqueado (licença suspensa ou cache expirado sem internet)
 
-Se LICENSE_CHECK_URL ou LICENSE_KEY não estiverem configurados no .env,
-a verificação é pulada (modo "licenciamento não configurado ainda") — isso
-permite rodar o sistema antes do endpoint de licença na VPS existir.
+LICENSE_CHECK_URL e LICENSE_KEY são obrigatórios na instalação do cliente.
 """
 import json
 import os
@@ -45,8 +43,8 @@ def main() -> int:
     license_key = os.environ.get("LICENSE_KEY", "").strip()
 
     if not check_url or not license_key:
-        print("[licenca] LICENSE_CHECK_URL/LICENSE_KEY nao configurados — verificacao pulada.")
-        return 0
+        print("[licenca] LICENSE_CHECK_URL/LICENSE_KEY nao configurados. Bloqueando inicializacao.")
+        return 1
 
     import requests
 

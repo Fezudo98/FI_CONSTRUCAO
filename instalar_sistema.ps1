@@ -63,7 +63,10 @@ try {
     }
 
     Write-Host '[5/5] Criando/atualizando estrutura do banco...'
-    & $venvPython scripts\bootstrap_database.py
+    Write-Host 'A instalação recriará o banco configurado no .env e apagará dados existentes.' -ForegroundColor Yellow
+    $confirmation = Read-Host 'Digite INSTALAR para confirmar'
+    if ($confirmation -ne 'INSTALAR') { throw 'Instalação cancelada; o banco não foi alterado.' }
+    & $venvPython scripts\bootstrap_database.py --reset --confirm-reset=APAGAR
     if ($LASTEXITCODE -ne 0) { throw 'Não foi possível preparar o banco de dados. Revise o arquivo .env.' }
     Write-Host ''
     Write-Host 'Instalação concluída. Execute iniciar_sistema.bat para usar o sistema.' -ForegroundColor Green

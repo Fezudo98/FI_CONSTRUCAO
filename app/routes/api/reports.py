@@ -28,10 +28,10 @@ def dashboard():
 
     return jsonify(
         {
-            "kpis": reports_service.summary_kpis(user.company_id, date_start, date_end),
-            "sales_by_day": reports_service.sales_by_day(user.company_id, date_start, date_end),
-            "top_products": reports_service.top_products(user.company_id, date_start, date_end),
-            "payment_breakdown": reports_service.payment_breakdown(user.company_id, date_start, date_end),
+            "kpis": reports_service.summary_kpis(date_start, date_end),
+            "sales_by_day": reports_service.sales_by_day(date_start, date_end),
+            "top_products": reports_service.top_products(date_start, date_end),
+            "payment_breakdown": reports_service.payment_breakdown(date_start, date_end),
         }
     )
 
@@ -40,4 +40,4 @@ def dashboard():
 @permission_required(PERM_ESTOQUE_VER)
 def low_stock():
     user = current_user()
-    return jsonify({"products": reports_service.low_stock_products(user.company_id)})
+    return jsonify({"products": reports_service.low_stock_products()})

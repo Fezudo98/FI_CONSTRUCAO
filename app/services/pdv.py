@@ -10,13 +10,12 @@ from app.services.units import to_base_unit
 from app.services.errors import ServiceError
 
 
-def open_cash_session(company_id, user_id, opening_amount: Decimal) -> CashSession:
-    existing = CashSession.query.filter_by(company_id=company_id, status=CASH_OPEN).first()
+def open_cash_session(user_id, opening_amount: Decimal) -> CashSession:
+    existing = CashSession.query.filter_by(status=CASH_OPEN).first()
     if existing is not None:
-        raise ServiceError("Já existe um caixa aberto para esta empresa.")
+        raise ServiceError("Já existe um caixa aberto neste depósito.")
 
     session = CashSession(
-        company_id=company_id,
         opened_by_id=user_id,
         opening_amount=opening_amount,
         opened_at=datetime.now(timezone.utc),
@@ -38,11 +37,11 @@ def close_cash_session(session: CashSession, user_id, closing_amount: Decimal) -
     return session
 
 
-def get_open_cash_session(company_id) -> CashSession | None:
-    return CashSession.query.filter_by(company_id=company_id, status=CASH_OPEN).first()
+def get_open_cash_session() -> CashSession | None:
+    return CashSession.query.filter_by(status=CASH_OPEN).first()
 
 
-def create_sale(company_id, user_id, cash_session_id, default_location_id, items, payments,
+def create_sale(user_id, cash_session_id, default_location_id, items, payments,
                  customer_name=None, customer_document=None, customer_id=None) -> Sale:
     """items: lista de {product_id, unit, quantity, unit_price}
     payments: lista de {method, amount}
@@ -51,7 +50,6 @@ def create_sale(company_id, user_id, cash_session_id, default_location_id, items
         raise ServiceError("A venda precisa ter ao menos um item.")
 
     sale = Sale(
-        company_id=company_id,
         cash_session_id=cash_session_id,
         created_by_id=user_id,
         customer_id=customer_id,
@@ -69,7 +67,8 @@ def create_sale(company_id, user_id, cash_session_id, default_location_id, items
             raise ServiceError(f"Produto {item['product_id']} não encontrado.")
 
         quantity = Decimal(str(item["quantity"]))
-        unit_price = Decimal(str(item["unit_price"]))
+        unit_factor = to_base_unit(product, item["unit"], Decimal(1))
+        unit_price = (Decimal(product.sale_price) * unit_factor).quantize(Decimal("0.0001"))
         line_total = (quantity * unit_price).quantize(Decimal("0.01"))
         total += line_total
 
@@ -84,9 +83,9 @@ def create_sale(company_id, user_id, cash_session_id, default_location_id, items
             )
         )
 
-        base_quantity = to_base_unit(product, item["unit"], quantity)
+        base_quantity = unit_factor * quantity
         inventory.withdraw_stock(
-            company_id, product, default_location_id, base_quantity,
+            product, default_location_id, base_quantity,
             reference_type="sale", reference_id=sale.id, user_id=user_id,
         )
 

@@ -7,8 +7,6 @@ class Customer(db.Model, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "customers"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
-
     name = db.Column(db.String(150), nullable=False)
     document = db.Column(db.String(20))  # CPF ou CNPJ
     phone = db.Column(db.String(20))

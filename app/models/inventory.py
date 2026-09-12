@@ -8,11 +8,10 @@ class StockLocation(db.Model, TimestampMixin):
     __tablename__ = "stock_locations"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     code = db.Column(db.String(40), nullable=False)
     description = db.Column(db.String(200))
 
-    __table_args__ = (db.UniqueConstraint("company_id", "code", name="uq_location_code"),)
+    __table_args__ = (db.UniqueConstraint("code", name="uq_location_code"),)
 
 
 class Lot(db.Model, TimestampMixin):
@@ -32,7 +31,6 @@ class StockBalance(db.Model, TimestampMixin):
     __tablename__ = "stock_balances"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
     location_id = db.Column(db.Integer, db.ForeignKey("stock_locations.id"), nullable=False)
     lot_id = db.Column(db.Integer, db.ForeignKey("lots.id"), nullable=True)
@@ -46,7 +44,7 @@ class StockBalance(db.Model, TimestampMixin):
 
     __table_args__ = (
         db.UniqueConstraint(
-            "company_id", "product_id", "location_id", "lot_id", name="uq_stock_balance"
+            "product_id", "location_id", "lot_id", name="uq_stock_balance"
         ),
     )
 
@@ -63,7 +61,6 @@ class StockMovement(db.Model, TimestampMixin):
     __tablename__ = "stock_movements"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
     location_id = db.Column(db.Integer, db.ForeignKey("stock_locations.id"), nullable=False)
     lot_id = db.Column(db.Integer, db.ForeignKey("lots.id"), nullable=True)

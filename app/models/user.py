@@ -1,19 +1,6 @@
-"""Multiempresa/filial, usuários, papéis e permissões."""
+"""Usuários, papéis e permissões do depósito."""
 from app.extensions import db
 from app.models.base import TimestampMixin, SoftDeleteMixin
-
-
-class Company(db.Model, TimestampMixin, SoftDeleteMixin):
-    """Empresa ou filial. Todo dado operacional pertence a uma Company."""
-    __tablename__ = "companies"
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(150), nullable=False)
-    legal_name = db.Column(db.String(200))
-    document = db.Column(db.String(20))  # CNPJ/CPF
-    is_headquarters = db.Column(db.Boolean, default=False, nullable=False)
-
-    users = db.relationship("User", back_populates="company")
 
 
 ROLE_ADMIN = "admin"
@@ -27,14 +14,11 @@ class User(db.Model, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
-
     name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(20), nullable=False, default=ROLE_CASHIER)
 
-    company = db.relationship("Company", back_populates="users")
     permission_overrides = db.relationship("UserPermissionOverride", back_populates="user")
 
     def has_permission(self, code: str) -> bool:
@@ -47,8 +31,7 @@ class User(db.Model, TimestampMixin, SoftDeleteMixin):
 
 
 class UserPermissionOverride(db.Model, TimestampMixin):
-    """Permite liberar ou revogar uma permissão específica para um usuário,
-    independente do que o papel dele normalmente permite."""
+    """Permissão específica concedida ou revogada para um usuário."""
     __tablename__ = "user_permission_overrides"
 
     id = db.Column(db.Integer, primary_key=True)

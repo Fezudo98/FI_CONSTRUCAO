@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 
-from app.models.company import User
+from app.models.user import User
 from app.services.auth import check_password, login_user, logout_user, current_user
 
 bp = Blueprint("api_auth", __name__, url_prefix="/api/auth")
@@ -40,5 +40,4 @@ def _serialize_user(user: User):
         "name": user.name,
         "email": user.email,
         "role": user.role,
-        "company_id": user.company_id,
     }

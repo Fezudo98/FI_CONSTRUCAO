@@ -15,7 +15,7 @@ bp = Blueprint("api_pdv", __name__, url_prefix="/api/pdv")
 @permission_required(PERM_PDV)
 def get_cash_session():
     user = current_user()
-    session_obj = pdv.get_open_cash_session(user.company_id)
+    session_obj = pdv.get_open_cash_session()
     if session_obj is None:
         return jsonify({"cash_session": None})
     return jsonify(
@@ -35,8 +35,8 @@ def open_cash_session():
     user = current_user()
     data = request.get_json(silent=True) or {}
     try:
-        session_obj = pdv.open_cash_session(user.company_id, user.id, data.get("opening_amount", 0))
-        log_action(user.company_id, user, "caixa.aberto", f"Abertura: R$ {data.get('opening_amount', 0)}")
+        session_obj = pdv.open_cash_session(user.id, data.get("opening_amount", 0))
+        log_action(user, "caixa.aberto", f"Abertura: R$ {data.get('opening_amount', 0)}")
         db.session.commit()
     except ServiceError as exc:
         db.session.rollback()
@@ -55,7 +55,7 @@ def close_cash_session(session_id):
     data = request.get_json(silent=True) or {}
     try:
         pdv.close_cash_session(session_obj, user.id, data.get("closing_amount", 0))
-        log_action(user.company_id, user, "caixa.fechado", f"Fechamento: R$ {data.get('closing_amount', 0)}")
+        log_action(user, "caixa.fechado", f"Fechamento: R$ {data.get('closing_amount', 0)}")
         db.session.commit()
     except ServiceError as exc:
         db.session.rollback()
@@ -70,7 +70,7 @@ def create_sale():
     user = current_user()
     data = request.get_json(silent=True) or {}
 
-    cash_session = pdv.get_open_cash_session(user.company_id)
+    cash_session = pdv.get_open_cash_session()
     if cash_session is None:
         return jsonify({"error": "Nenhum caixa aberto. Abra o caixa antes de vender."}), 400
 
@@ -80,7 +80,6 @@ def create_sale():
 
     try:
         sale = pdv.create_sale(
-            user.company_id,
             user.id,
             cash_session.id,
             location_id,
@@ -91,7 +90,7 @@ def create_sale():
             customer_id=data.get("customer_id"),
         )
         db.session.flush()
-        log_action(user.company_id, user, "venda.registrada", f"Venda #{sale.id} - R$ {sale.total}")
+        log_action(user, "venda.registrada", f"Venda #{sale.id} - R$ {sale.total}")
         db.session.commit()
     except ServiceError as exc:
         db.session.rollback()
@@ -105,9 +104,6 @@ def create_sale():
 def get_sale(sale_id):
     user = current_user()
     sale = Sale.query.get_or_404(sale_id)
-    if sale.company_id != user.company_id:
-        return jsonify({"error": "Venda não encontrada."}), 404
-
     return jsonify(
         {
             "sale": {

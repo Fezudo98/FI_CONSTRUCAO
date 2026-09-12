@@ -39,7 +39,7 @@ def _serialize_po(po: PurchaseOrder):
 @permission_required(PERM_COMPRAS)
 def list_suppliers():
     user = current_user()
-    suppliers = Supplier.query.filter_by(company_id=user.company_id, is_active=True).order_by(Supplier.name).all()
+    suppliers = Supplier.query.filter_by(is_active=True).order_by(Supplier.name).all()
     return jsonify({"suppliers": [_serialize_supplier(s) for s in suppliers]})
 
 
@@ -52,7 +52,6 @@ def create_supplier():
         return jsonify({"error": "Campo obrigatório: name"}), 400
 
     supplier = Supplier(
-        company_id=user.company_id,
         name=data["name"],
         document=data.get("document"),
         phone=data.get("phone"),
@@ -68,7 +67,7 @@ def create_supplier():
 def list_purchase_orders():
     user = current_user()
     status = request.args.get("status")
-    query = PurchaseOrder.query.filter_by(company_id=user.company_id)
+    query = PurchaseOrder.query
     if status:
         query = query.filter_by(status=status)
     orders = query.order_by(PurchaseOrder.id.desc()).limit(200).all()
@@ -85,7 +84,7 @@ def create_purchase_order():
         return jsonify({"error": "Campo obrigatório: supplier_id"}), 400
 
     try:
-        po = purchasing_service.create_purchase_order(user.company_id, user.id, supplier_id, data.get("items", []))
+        po = purchasing_service.create_purchase_order(user.id, supplier_id, data.get("items", []))
         db.session.commit()
     except ServiceError as exc:
         db.session.rollback()
@@ -98,7 +97,7 @@ def create_purchase_order():
 def receive_purchase_order(po_id):
     user = current_user()
     po = db.session.get(PurchaseOrder, po_id)
-    if po is None or po.company_id != user.company_id:
+    if po is None:
         return jsonify({"error": "Pedido de compra não encontrado."}), 404
 
     data = request.get_json(silent=True) or {}

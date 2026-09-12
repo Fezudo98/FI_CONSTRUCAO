@@ -2,8 +2,7 @@
 
 Sistema interno para depósito de materiais de construção: PDV, estoque por
 endereço/lote, orçamentos e pedidos, compras e fornecedores, financeiro e
-logística de entrega, com suporte a múltiplas empresas/filiais e permissões
-por papel.
+logística de entrega e permissões locais por papel para um único depósito.
 
 **Importante:** este sistema roda **localmente**, no computador do próprio
 depósito — não é hospedado na nuvem. Um PC atua como servidor (aplicação +
@@ -34,7 +33,7 @@ navegador de ponta a ponta):
 - Logística: transportadoras, veículos, motoristas, agendamento de entrega,
   fluxo agendado → em rota → concluída (marca o pedido como entregue
   automaticamente), registro de ocorrências.
-- Modelo de dados completo para multiempresa/filial e permissões por papel.
+- Modelo de dados monodepósito com permissões locais por papel.
 - **Clientes (CRM)**: cadastro com endereço, busca rápida (usada no PDV,
   orçamentos e pedidos), exclusão segura — apaga de verdade só quem nunca
   teve movimento; quem já comprou é apenas inativado, preservando o histórico.
@@ -150,7 +149,7 @@ Puma já existente na VPS.
 ## Estrutura principal
 
 ```text
-app/models/            modelos de dados por domínio (company, catalog,
+app/models/            modelos de dados por domínio (user, catalog,
                         inventory, sales, purchasing, finance, logistics)
 app/services/          regras de negócio (pdv, inventory, units, auth,
                         permissions)

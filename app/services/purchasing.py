@@ -22,12 +22,11 @@ from app.services import inventory
 from app.services.errors import ServiceError
 
 
-def create_purchase_order(company_id, user_id, supplier_id, items) -> PurchaseOrder:
+def create_purchase_order(user_id, supplier_id, items) -> PurchaseOrder:
     if not items:
         raise ServiceError("O pedido de compra precisa ter ao menos um item.")
 
     po = PurchaseOrder(
-        company_id=company_id,
         supplier_id=supplier_id,
         created_by_id=user_id,
         status=PO_SENT,
@@ -60,11 +59,11 @@ def create_purchase_order(company_id, user_id, supplier_id, items) -> PurchaseOr
     return po
 
 
-def _update_average_cost(company_id, product: Product, received_quantity_base: Decimal, unit_price_base: Decimal):
+def _update_average_cost(product: Product, received_quantity_base: Decimal, unit_price_base: Decimal):
     """Atualiza o custo médio ponderado do produto considerando o saldo total
     já em estoque (em todas as localizações) mais a quantidade recebida agora."""
     current_total = db.session.query(db.func.coalesce(db.func.sum(StockBalance.quantity), 0)).filter_by(
-        company_id=company_id, product_id=product.id
+        product_id=product.id
     ).scalar()
     current_total = Decimal(current_total or 0)
 
@@ -117,9 +116,9 @@ def receive_purchase_order(purchase_order: PurchaseOrder, items_received, locati
         base_quantity = to_base_unit(product, po_item.unit, quantity)
         base_unit_price = po_item.unit_price / to_base_unit(product, po_item.unit, Decimal(1))
 
-        _update_average_cost(purchase_order.company_id, product, base_quantity, base_unit_price)
+        _update_average_cost(product, base_quantity, base_unit_price)
         inventory.receive_stock(
-            purchase_order.company_id, product, location_id, base_quantity,
+            product, location_id, base_quantity,
             reference_type="purchase_receipt", reference_id=receipt.id, user_id=user_id,
         )
 
@@ -128,7 +127,6 @@ def receive_purchase_order(purchase_order: PurchaseOrder, items_received, locati
 
     db.session.add(
         Payable(
-            company_id=purchase_order.company_id,
             supplier_id=purchase_order.supplier_id,
             purchase_order_id=purchase_order.id,
             description=f"Recebimento #{receipt.id} do pedido de compra #{purchase_order.id}",

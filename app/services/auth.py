@@ -4,7 +4,7 @@ from functools import wraps
 from flask import session, jsonify
 
 from app.extensions import bcrypt, db
-from app.models.company import User
+from app.models.user import User
 
 
 def hash_password(password: str) -> str:

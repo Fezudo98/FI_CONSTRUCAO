@@ -88,3 +88,13 @@ def test_lookup_does_not_partial_match(auth_client):
 
     resp = auth_client.get("/api/products/lookup?code=111")
     assert resp.get_json()["product"]["barcode"] == "111"
+
+
+def test_barcode_must_be_unique(auth_client):
+    _create_product(auth_client, sku="BAR01", barcode="7890000000001")
+    resp = auth_client.post("/api/products", json={
+        "sku": "BAR02", "name": "Outro produto", "base_unit": "UN",
+        "sale_price": "12.00", "barcode": "7890000000001",
+    })
+    assert resp.status_code == 409
+    assert "código de barras" in resp.get_json()["error"]

@@ -7,7 +7,6 @@ class Carrier(db.Model, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "carriers"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     name = db.Column(db.String(150), nullable=False)
     document = db.Column(db.String(20))
     is_own_fleet = db.Column(db.Boolean, default=True, nullable=False)

@@ -11,7 +11,7 @@ load_dotenv()
 
 from app import create_app  # noqa: E402
 from app.extensions import db  # noqa: E402
-from app.models.company import Company, User, ROLE_ADMIN  # noqa: E402
+from app.models.user import User, ROLE_ADMIN  # noqa: E402
 from app.services.auth import hash_password  # noqa: E402
 
 
@@ -33,14 +33,7 @@ def main():
             print(f"Já existe um usuário com o e-mail {email}.")
             return
 
-        company = Company.query.filter_by(is_headquarters=True).first()
-        if company is None:
-            company = Company(name="Matriz", is_headquarters=True)
-            db.session.add(company)
-            db.session.flush()
-
         user = User(
-            company_id=company.id,
             name=name,
             email=email,
             password_hash=hash_password(password),

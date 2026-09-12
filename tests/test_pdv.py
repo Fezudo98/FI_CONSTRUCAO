@@ -121,6 +121,24 @@ def test_sale_fails_when_payment_mismatch(auth_client):
     assert "diferente do total" in resp.get_json()["error"]
 
 
+def test_sale_ignores_price_sent_by_browser(auth_client):
+    product = _create_product(auth_client)
+    location = _create_location(auth_client)
+    auth_client.post("/api/pdv/cash-session/open", json={"opening_amount": "0"})
+    auth_client.post("/api/inventory/adjust", json={
+        "product_id": product["id"], "location_id": location["id"], "new_quantity": "10",
+    })
+
+    resp = auth_client.post("/api/pdv/sales", json={
+        "location_id": location["id"],
+        "items": [{"product_id": product["id"], "unit": "UN", "quantity": 1, "unit_price": "0.01"}],
+        "payments": [{"method": "pix", "amount": "35.00"}],
+    })
+
+    assert resp.status_code == 201, resp.get_json()
+    assert resp.get_json()["sale"]["total"] == "35.00"
+
+
 def test_sale_fails_when_insufficient_stock(auth_client):
     product = _create_product(auth_client)
     location = _create_location(auth_client)

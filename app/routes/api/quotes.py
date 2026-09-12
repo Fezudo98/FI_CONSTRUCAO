@@ -39,7 +39,7 @@ def _serialize(q: Quote):
 def list_quotes():
     user = current_user()
     status = request.args.get("status")
-    query = Quote.query.filter_by(company_id=user.company_id)
+    query = Quote.query
     if status:
         query = query.filter_by(status=status)
     quotes = query.order_by(Quote.id.desc()).limit(200).all()
@@ -53,7 +53,7 @@ def create_quote():
     data = request.get_json(silent=True) or {}
     try:
         quote = quotes_service.create_quote(
-            user.company_id, user.id,
+            user.id,
             data.get("customer_name"),
             data.get("items", []),
             customer_document=data.get("customer_document"),
@@ -69,7 +69,7 @@ def create_quote():
 
 def _get_quote_or_404(quote_id, user):
     quote = db.session.get(Quote, quote_id)
-    if quote is None or quote.company_id != user.company_id:
+    if quote is None:
         return None
     return quote
 

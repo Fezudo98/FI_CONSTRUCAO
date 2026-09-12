@@ -8,7 +8,7 @@ class Product(db.Model, TimestampMixin, SoftDeleteMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     sku = db.Column(db.String(40), unique=True, nullable=False, index=True)
-    barcode = db.Column(db.String(40), index=True)
+    barcode = db.Column(db.String(40), unique=True, index=True)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     category = db.Column(db.String(100))

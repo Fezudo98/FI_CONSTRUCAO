@@ -7,12 +7,11 @@ from app.models.sales import Sale, Quote, Order
 from app.services.errors import ServiceError
 
 
-def create_customer(company_id, data) -> Customer:
+def create_customer(data) -> Customer:
     if not data.get("name"):
         raise ServiceError("Campo obrigatório: name")
 
     customer = Customer(
-        company_id=company_id,
         name=data["name"],
         document=data.get("document"),
         phone=data.get("phone"),

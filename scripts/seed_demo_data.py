@@ -18,7 +18,7 @@ load_dotenv()
 
 from app import create_app  # noqa: E402
 from app.extensions import db  # noqa: E402
-from app.models.company import Company, User  # noqa: E402
+from app.models.user import User  # noqa: E402
 from app.models.catalog import Product, UnitConversion  # noqa: E402
 from app.models.inventory import StockLocation, StockBalance  # noqa: E402
 from app.models.purchasing import Supplier  # noqa: E402
@@ -75,12 +75,7 @@ CASH_OPENING_AMOUNT = Decimal("300.00")
 def main():
     app = create_app()
     with app.app_context():
-        company = Company.query.filter_by(is_headquarters=True).first()
-        if company is None:
-            print("Nenhuma empresa encontrada. Rode create_dev_admin.py primeiro.")
-            sys.exit(1)
-
-        admin = User.query.filter_by(company_id=company.id).first()
+        admin = User.query.first()
         if admin is None:
             print("Nenhum usuário encontrado. Rode create_dev_admin.py primeiro.")
             sys.exit(1)
@@ -88,18 +83,18 @@ def main():
         # --- endereços de estoque ---
         location_by_code = {}
         for code, description in LOCATIONS:
-            loc = StockLocation.query.filter_by(company_id=company.id, code=code).first()
+            loc = StockLocation.query.filter_by(code=code).first()
             if loc is None:
-                loc = StockLocation(company_id=company.id, code=code, description=description)
+                loc = StockLocation(code=code, description=description)
                 db.session.add(loc)
                 db.session.flush()
                 print(f"[endereco] criado {code} - {description}")
             location_by_code[code] = loc
 
         # --- fornecedor de exemplo ---
-        supplier = Supplier.query.filter_by(company_id=company.id, name=SUPPLIER_NAME).first()
+        supplier = Supplier.query.filter_by(name=SUPPLIER_NAME).first()
         if supplier is None:
-            supplier = Supplier(company_id=company.id, name=SUPPLIER_NAME, phone="(11) 4002-8922")
+            supplier = Supplier(name=SUPPLIER_NAME, phone="(11) 4002-8922")
             db.session.add(supplier)
             print(f"[fornecedor] criado {SUPPLIER_NAME}")
 
@@ -119,11 +114,11 @@ def main():
 
             location = location_by_code[loc_code]
             existing_balance = StockBalance.query.filter_by(
-                company_id=company.id, product_id=product.id, location_id=location.id
+                product_id=product.id, location_id=location.id
             ).first()
             if existing_balance is None or existing_balance.quantity == 0:
                 inventory.receive_stock(
-                    company.id, product, location.id, Decimal(initial_qty),
+                    product, location.id, Decimal(initial_qty),
                     reference_type="seed", note="Carga inicial de demonstração", user_id=admin.id,
                 )
                 print(f"  -> estoque inicial: {initial_qty} {base_unit} em {loc_code}")
@@ -131,16 +126,16 @@ def main():
         db.session.commit()
 
         # --- caixa aberto ---
-        open_session = pdv.get_open_cash_session(company.id)
+        open_session = pdv.get_open_cash_session()
         if open_session is None:
-            pdv.open_cash_session(company.id, admin.id, CASH_OPENING_AMOUNT)
+            pdv.open_cash_session(admin.id, CASH_OPENING_AMOUNT)
             db.session.commit()
             print(f"[caixa] aberto com R$ {CASH_OPENING_AMOUNT}")
         else:
             print(f"[caixa] já havia um caixa aberto (#{open_session.id})")
 
         total_products = Product.query.count()
-        total_locations = StockLocation.query.filter_by(company_id=company.id).count()
+        total_locations = StockLocation.query.count()
         print(f"\nConcluído: {total_products} produtos, {total_locations} endereços, "
               f"fornecedor '{SUPPLIER_NAME}' e caixa aberto.")
 

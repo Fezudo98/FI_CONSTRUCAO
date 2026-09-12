@@ -39,7 +39,7 @@ def _serialize(o: Order):
 def list_orders():
     user = current_user()
     status = request.args.get("status")
-    query = Order.query.filter_by(company_id=user.company_id)
+    query = Order.query
     if status:
         query = query.filter_by(status=status)
     orders = query.order_by(Order.id.desc()).limit(200).all()
@@ -57,7 +57,7 @@ def create_order():
 
     try:
         order = orders_service.create_order(
-            user.company_id, user.id,
+            user.id,
             data.get("customer_name"),
             data.get("items", []),
             location_id,
@@ -73,7 +73,7 @@ def create_order():
 
 def _get_order_or_404(order_id, user):
     order = db.session.get(Order, order_id)
-    if order is None or order.company_id != user.company_id:
+    if order is None:
         return None
     return order
 

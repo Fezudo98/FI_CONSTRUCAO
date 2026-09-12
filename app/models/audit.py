@@ -8,7 +8,6 @@ class AuditLog(db.Model):
     __tablename__ = "audit_logs"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     timestamp = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)

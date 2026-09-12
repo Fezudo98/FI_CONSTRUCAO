@@ -37,16 +37,11 @@ def client(app):
 @pytest.fixture()
 def admin_user(app):
     from app.extensions import db
-    from app.models.company import Company, User, ROLE_ADMIN
+    from app.models.user import User, ROLE_ADMIN
     from app.services.auth import hash_password
 
     with app.app_context():
-        company = Company(name="Matriz", is_headquarters=True)
-        db.session.add(company)
-        db.session.flush()
-
         user = User(
-            company_id=company.id,
             name="Admin",
             email="admin@teste.com",
             password_hash=hash_password("senhaadmin123"),
@@ -54,7 +49,7 @@ def admin_user(app):
         )
         db.session.add(user)
         db.session.commit()
-        return {"id": user.id, "email": user.email, "company_id": company.id}
+        return {"id": user.id, "email": user.email}
 
 
 @pytest.fixture()

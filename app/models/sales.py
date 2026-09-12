@@ -12,7 +12,6 @@ class CashSession(db.Model, TimestampMixin):
     __tablename__ = "cash_sessions"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     opened_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     closed_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
 
@@ -34,7 +33,6 @@ class Sale(db.Model, TimestampMixin):
     __tablename__ = "sales"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     cash_session_id = db.Column(db.Integer, db.ForeignKey("cash_sessions.id"), nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=True)
@@ -97,7 +95,6 @@ class Quote(db.Model, TimestampMixin):
     __tablename__ = "quotes"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=True)
 
@@ -142,7 +139,6 @@ class Order(db.Model, TimestampMixin):
     __tablename__ = "orders"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     quote_id = db.Column(db.Integer, db.ForeignKey("quotes.id"), unique=True, nullable=True)
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     location_id = db.Column(db.Integer, db.ForeignKey("stock_locations.id"), nullable=False)

@@ -7,7 +7,6 @@ class Supplier(db.Model, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "suppliers"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
 
     name = db.Column(db.String(150), nullable=False)
     document = db.Column(db.String(20))
@@ -20,7 +19,6 @@ class PurchaseQuoteRequest(db.Model, TimestampMixin):
     __tablename__ = "purchase_quote_requests"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     note = db.Column(db.String(255))
 
@@ -55,7 +53,6 @@ class PurchaseOrder(db.Model, TimestampMixin):
     __tablename__ = "purchase_orders"
 
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"), nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 

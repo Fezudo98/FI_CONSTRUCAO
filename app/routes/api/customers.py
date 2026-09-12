@@ -34,7 +34,7 @@ def _serialize(c: Customer):
 @permission_required(PERM_CLIENTES)
 def list_customers():
     user = current_user()
-    query = Customer.query.filter_by(company_id=user.company_id, is_active=True)
+    query = Customer.query.filter_by(is_active=True)
     search = request.args.get("q")
     if search:
         like = f"%{search}%"
@@ -58,9 +58,9 @@ def create_customer():
     user = current_user()
     data = request.get_json(silent=True) or {}
     try:
-        customer = customers_service.create_customer(user.company_id, data)
+        customer = customers_service.create_customer(data)
         db.session.flush()
-        log_action(user.company_id, user, "cliente.criado", f"{customer.name} (#{customer.id})")
+        log_action(user, "cliente.criado", f"{customer.name} (#{customer.id})")
         db.session.commit()
     except ServiceError as exc:
         db.session.rollback()
@@ -75,7 +75,7 @@ def update_customer(customer_id):
     customer = Customer.query.get_or_404(customer_id)
     data = request.get_json(silent=True) or {}
     customers_service.update_customer(customer, data)
-    log_action(user.company_id, user, "cliente.editado", f"{customer.name} (#{customer.id})")
+    log_action(user, "cliente.editado", f"{customer.name} (#{customer.id})")
     db.session.commit()
     return jsonify({"customer": _serialize(customer)})
 
@@ -87,6 +87,6 @@ def delete_customer(customer_id):
     customer = Customer.query.get_or_404(customer_id)
     name = customer.name
     customers_service.delete_customer(customer)
-    log_action(user.company_id, user, "cliente.removido", f"{name} (#{customer_id})")
+    log_action(user, "cliente.removido", f"{name} (#{customer_id})")
     db.session.commit()
     return jsonify({"ok": True})

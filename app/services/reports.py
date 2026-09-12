@@ -14,14 +14,13 @@ from app.models.sales import Sale, SaleItem, Payment, SALE_STATUS_COMPLETED
 from app.models.catalog import Product
 
 
-def sales_by_day(company_id, date_start, date_end):
+def sales_by_day(date_start, date_end):
     rows = (
         db.session.query(
             func.date(Sale.created_at).label("day"),
             func.sum(Sale.total).label("total"),
         )
         .filter(
-            Sale.company_id == company_id,
             Sale.status == SALE_STATUS_COMPLETED,
             func.date(Sale.created_at) >= date_start,
             func.date(Sale.created_at) <= date_end,
@@ -33,7 +32,7 @@ def sales_by_day(company_id, date_start, date_end):
     return [{"day": str(r.day), "total": str(r.total)} for r in rows]
 
 
-def top_products(company_id, date_start, date_end, limit=10):
+def top_products(date_start, date_end, limit=10):
     rows = (
         db.session.query(
             Product.id, Product.name, func.sum(SaleItem.quantity).label("qty"),
@@ -42,7 +41,6 @@ def top_products(company_id, date_start, date_end, limit=10):
         .join(SaleItem, SaleItem.product_id == Product.id)
         .join(Sale, Sale.id == SaleItem.sale_id)
         .filter(
-            Sale.company_id == company_id,
             Sale.status == SALE_STATUS_COMPLETED,
             func.date(Sale.created_at) >= date_start,
             func.date(Sale.created_at) <= date_end,
@@ -55,12 +53,11 @@ def top_products(company_id, date_start, date_end, limit=10):
     return [{"product_id": r.id, "name": r.name, "quantity": str(r.qty), "total": str(r.total)} for r in rows]
 
 
-def payment_breakdown(company_id, date_start, date_end):
+def payment_breakdown(date_start, date_end):
     rows = (
         db.session.query(Payment.method, func.sum(Payment.amount).label("total"))
         .join(Sale, Sale.id == Payment.sale_id)
         .filter(
-            Sale.company_id == company_id,
             Sale.status == SALE_STATUS_COMPLETED,
             func.date(Sale.created_at) >= date_start,
             func.date(Sale.created_at) <= date_end,
@@ -71,10 +68,9 @@ def payment_breakdown(company_id, date_start, date_end):
     return [{"method": r.method, "total": str(r.total)} for r in rows]
 
 
-def summary_kpis(company_id, date_start, date_end):
+def summary_kpis(date_start, date_end):
     sales = (
         Sale.query.filter(
-            Sale.company_id == company_id,
             Sale.status == SALE_STATUS_COMPLETED,
             func.date(Sale.created_at) >= date_start,
             func.date(Sale.created_at) <= date_end,
@@ -102,7 +98,7 @@ def summary_kpis(company_id, date_start, date_end):
     }
 
 
-def low_stock_products(company_id):
+def low_stock_products():
     """Produtos cujo saldo total (somado em todos os endereços) está no ou
     abaixo do estoque mínimo configurado."""
     from app.models.inventory import StockBalance
@@ -114,7 +110,7 @@ def low_stock_products(company_id):
         )
         .outerjoin(
             StockBalance,
-            (StockBalance.product_id == Product.id) & (StockBalance.company_id == company_id),
+            StockBalance.product_id == Product.id,
         )
         .filter(Product.is_active.is_(True))
         .group_by(Product.id, Product.name, Product.min_stock)

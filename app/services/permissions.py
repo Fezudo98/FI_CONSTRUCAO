@@ -1,5 +1,5 @@
 """Mapa de permissões por papel. Exceções por usuário ficam em UserPermissionOverride."""
-from app.models.company import ROLE_ADMIN, ROLE_MANAGER, ROLE_CASHIER, ROLE_STOCK
+from app.models.user import ROLE_ADMIN, ROLE_MANAGER, ROLE_CASHIER, ROLE_STOCK
 
 PERM_PDV = "pdv"
 PERM_ESTOQUE_VER = "estoque.ver"
