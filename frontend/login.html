@@ -7,4 +7,5 @@
 <div class="field"><label for="password">Senha</label><input type="password" id="password" required autocomplete="current-password"></div>
 <button type="submit" class="primary btn-block">Entrar</button></form></div></section>
 <aside class="login-visual" aria-hidden="true"><div class="login-visual-copy"><div class="login-signal"></div><h2>O depósito inteiro, no ritmo do balcão.</h2><p>Vendas, materiais e entregas conectados em uma operação clara.</p></div></aside></main>
-<script>document.getElementById('login-form').addEventListener('submit',async(e)=>{e.preventDefault();const a=document.getElementById('alert'),b=e.currentTarget.querySelector('button');a.hidden=true;b.disabled=true;b.textContent='Entrando…';try{const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value.trim(),password:document.getElementById('password').value})});const d=await r.json();if(!r.ok){a.textContent=d.error||'Confira seus dados e tente novamente.';a.hidden=false;return}location.href='/index.html'}catch(_){a.textContent='Servidor indisponível. Verifique a conexão e tente novamente.';a.hidden=false}finally{b.disabled=false;b.textContent='Entrar'}});</script></body></html>
+<script src="/static/js/login.js"></script></body></html>
+
