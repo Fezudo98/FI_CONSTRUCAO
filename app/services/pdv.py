@@ -94,7 +94,14 @@ def create_sale(company_id, user_id, cash_session_id, default_location_id, items
     for payment in payments:
         amount = Decimal(str(payment["amount"]))
         payments_total += amount
-        db.session.add(Payment(sale_id=sale.id, method=payment["method"], amount=amount))
+        db.session.add(
+            Payment(
+                sale_id=sale.id,
+                method=payment["method"],
+                amount=amount,
+                card_reference=payment.get("card_reference"),
+            )
+        )
 
     if payments_total != total:
         raise ServiceError(

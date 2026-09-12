@@ -127,7 +127,10 @@ def get_sale(sale_id):
                     }
                     for item in sale.items
                 ],
-                "payments": [{"method": p.method, "amount": str(p.amount)} for p in sale.payments],
+                "payments": [
+                    {"method": p.method, "amount": str(p.amount), "card_reference": p.card_reference}
+                    for p in sale.payments
+                ],
             }
         }
     )

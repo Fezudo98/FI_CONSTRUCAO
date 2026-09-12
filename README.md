@@ -16,7 +16,7 @@ Alguns módulos foram adaptados do **PUMA Commerce Core** (base interna de
 e-commerce/PDV da Puma Systems), simplificados para o contexto de um depósito
 B2B/balcão (sem loja virtual, cupons ou integrações de pagamento online).
 
-✅ **Pronto e testado** (35 testes automatizados, todos os fluxos validados no
+✅ **Pronto e testado** (36 testes automatizados, todos os fluxos validados no
 navegador de ponta a ponta):
 - Autenticação (login/logout por sessão), papéis e permissões.
 - Catálogo de produtos com conversão de unidades (ex.: 1 pallet = 40 unidades).
@@ -57,6 +57,13 @@ navegador de ponta a ponta):
   e apertar Enter adiciona 1 unidade direto no carrinho. No ajuste de
   estoque, escanear seleciona o produto automaticamente e foca o campo de
   quantidade, para gravação rápida de saldo.
+- **Maquininha de cartão (registro manual)**: ao escolher "Cartão débito" ou
+  "Cartão crédito" no PDV, aparece um campo opcional para o código
+  NSU/autorização impresso pela maquininha, salvo junto ao pagamento e
+  exibido no recibo — útil para conferência de caixa. Ainda não há
+  integração eletrônica com nenhuma operadora específica (Stone, PagBank,
+  GetNet etc.); isso depende de saber qual maquininha/operadora o cliente
+  usa e se ela oferece API/SDK de integração.
 
 🚧 **Pendente** (fora do escopo desta entrega):
 - Endpoint de licenciamento na VPS (o script `check_license.py` já existe e

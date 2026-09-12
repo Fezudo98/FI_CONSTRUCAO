@@ -128,6 +128,10 @@
               <option value="transferencia">Transferência</option>
             </select>
           </div>
+          <div style="margin-top:10px" id="card-reference-field" hidden>
+            <label>Código da maquininha (NSU/autorização, opcional)</label>
+            <input type="text" id="card-reference" placeholder="Ex.: 123456">
+          </div>
 
           <button class="primary" id="finalize-btn" style="width:100%; margin-top:14px">Finalizar venda</button>
           <button class="secondary" id="close-cash-btn" style="width:100%; margin-top:8px">Fechar caixa</button>
@@ -387,14 +391,30 @@ document.getElementById('customer-name').addEventListener('input', (e) => {
   }, 250);
 });
 
+function isCardPayment(method) {
+  return method === 'cartao_debito' || method === 'cartao_credito';
+}
+
+document.getElementById('payment-method').addEventListener('change', (e) => {
+  const cardField = document.getElementById('card-reference-field');
+  cardField.hidden = !isCardPayment(e.target.value);
+  if (cardField.hidden) document.getElementById('card-reference').value = '';
+});
+
 document.getElementById('finalize-btn').addEventListener('click', async () => {
   if (cart.length === 0) { showAlert('Adicione ao menos um item.'); return; }
   const total = cart.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
+  const paymentMethod = document.getElementById('payment-method').value;
+  const cardReference = document.getElementById('card-reference').value.trim();
 
   const payload = {
     location_id: parseInt(document.getElementById('location-select').value),
     items: cart.map(i => ({ product_id: i.product_id, unit: i.unit, quantity: i.quantity, unit_price: i.unit_price })),
-    payments: [{ method: document.getElementById('payment-method').value, amount: total.toFixed(2) }],
+    payments: [{
+      method: paymentMethod,
+      amount: total.toFixed(2),
+      card_reference: isCardPayment(paymentMethod) && cardReference ? cardReference : null,
+    }],
     customer_name: document.getElementById('customer-name').value || null,
     customer_id: selectedCustomerId,
   };
@@ -410,6 +430,9 @@ document.getElementById('finalize-btn').addEventListener('click', async () => {
   cart = [];
   renderCart();
   document.getElementById('customer-name').value = '';
+  document.getElementById('card-reference').value = '';
+  document.getElementById('card-reference-field').hidden = true;
+  document.getElementById('payment-method').value = 'dinheiro';
   selectedCustomerId = null;
 
   await showReceipt(data.sale.id);
@@ -424,8 +447,13 @@ async function showReceipt(saleId) {
   const itemsHtml = sale.items.map(i => `
     <div class="row"><span>${i.quantity} ${i.unit} x ${i.product_name}</span><span>${fmtMoney(i.total)}</span></div>
   `).join('');
+  const paymentMethodLabels = {
+    dinheiro: 'Dinheiro', pix: 'Pix', cartao_debito: 'Cartão débito',
+    cartao_credito: 'Cartão crédito', boleto: 'Boleto', transferencia: 'Transferência',
+  };
   const paymentsHtml = sale.payments.map(p => `
-    <div class="row"><span>${p.method}</span><span>${fmtMoney(p.amount)}</span></div>
+    <div class="row"><span>${paymentMethodLabels[p.method] || p.method}</span><span>${fmtMoney(p.amount)}</span></div>
+    ${p.card_reference ? `<div class="row"><span style="color:var(--muted); font-size:.8rem">NSU/autorização</span><span style="color:var(--muted); font-size:.8rem">${p.card_reference}</span></div>` : ''}
   `).join('');
 
   document.getElementById('receipt-content').innerHTML = `

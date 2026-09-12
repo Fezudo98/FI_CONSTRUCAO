@@ -70,6 +70,36 @@ def test_full_sale_flow_with_unit_conversion(auth_client):
     assert resp.status_code == 200
 
 
+def test_card_payment_stores_and_returns_reference(auth_client):
+    product = _create_product(auth_client)
+    location = _create_location(auth_client)
+
+    resp = auth_client.post("/api/pdv/cash-session/open", json={"opening_amount": "100.00"})
+    assert resp.status_code == 201
+
+    resp = auth_client.post(
+        "/api/inventory/adjust",
+        json={"product_id": product["id"], "location_id": location["id"], "new_quantity": "10"},
+    )
+    assert resp.status_code == 200
+
+    resp = auth_client.post(
+        "/api/pdv/sales",
+        json={
+            "location_id": location["id"],
+            "items": [{"product_id": product["id"], "unit": "UN", "quantity": 1, "unit_price": 35}],
+            "payments": [{"method": "cartao_credito", "amount": 35, "card_reference": "123456"}],
+        },
+    )
+    assert resp.status_code == 201, resp.get_json()
+    sale_id = resp.get_json()["sale"]["id"]
+
+    resp = auth_client.get(f"/api/pdv/sales/{sale_id}")
+    assert resp.status_code == 200
+    payments = resp.get_json()["sale"]["payments"]
+    assert payments == [{"method": "cartao_credito", "amount": "35.00", "card_reference": "123456"}]
+
+
 def test_sale_fails_when_payment_mismatch(auth_client):
     product = _create_product(auth_client)
     location = _create_location(auth_client)

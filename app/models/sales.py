@@ -76,6 +76,10 @@ class Payment(db.Model, TimestampMixin):
     sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=False)
     method = db.Column(db.String(20), nullable=False)
     amount = db.Column(db.Numeric(12, 2), nullable=False)
+    # NSU/codigo de autorizacao da maquininha, para conferencia de caixa.
+    # Preenchido manualmente ate que uma integracao com operadora especifica
+    # (Stone, PagBank, GetNet etc.) seja implementada.
+    card_reference = db.Column(db.String(40))
 
     sale = db.relationship("Sale", back_populates="payments")
 
