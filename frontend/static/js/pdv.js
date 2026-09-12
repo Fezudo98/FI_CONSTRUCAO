@@ -38,6 +38,7 @@ async function checkCashSession() {
     status.classList.add('is-open');
     status.innerHTML = '<span></span> Caixa aberto';
     await loadLocations();
+    requestAnimationFrame(() => document.getElementById('search-input').focus());
   } else {
     document.getElementById('cash-closed-card').hidden = false;
     document.getElementById('pdv-card').hidden = true;
@@ -171,18 +172,14 @@ document.getElementById('add-item-confirm').addEventListener('click', () => {
 function renderCart() {
   const el = document.getElementById('cart-items');
   if (cart.length === 0) {
-    el.innerHTML = '<p style="color:var(--muted); font-size:.85rem">Nenhum item ainda.</p>';
+    el.innerHTML = '<p class="pdv-empty-cart">Aguardando leitura do primeiro produto.</p>';
   } else {
     el.innerHTML = cart.map((item, idx) => `
       <div class="cart-item">
-        <div class="info">
-          ${escapeHtml(item.name)}
-          <div class="qty">${item.quantity} ${escapeHtml(item.unit)} x ${fmtMoney(item.unit_price)}</div>
-        </div>
-        <div>
-          ${fmtMoney(item.quantity * item.unit_price)}
-          <button class="danger" style="padding:4px 8px; margin-left:8px" data-idx="${idx}">×</button>
-        </div>
+        <div class="info">${escapeHtml(item.name)}<div class="qty">${escapeHtml(item.unit)}</div></div>
+        <div class="cart-item-quantity">${item.quantity}</div>
+        <div>${fmtMoney(item.unit_price)}</div>
+        <div class="cart-item-total">${fmtMoney(item.quantity * item.unit_price)} <button class="danger" aria-label="Remover ${escapeHtml(item.name)}" data-idx="${idx}">×</button></div>
       </div>
     `).join('');
     el.querySelectorAll('button[data-idx]').forEach(btn => {
@@ -208,10 +205,6 @@ document.getElementById('cart-close-btn').addEventListener('click', () => setMob
 document.getElementById('cart-scrim').addEventListener('click', () => setMobileCart(false));
 
 function focusCart() {
-  if (window.matchMedia('(max-width: 820px)').matches) {
-    setMobileCart(true);
-    return;
-  }
   const panel = document.getElementById('pdv-cart-panel');
   panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   panel.focus({ preventScroll: true });

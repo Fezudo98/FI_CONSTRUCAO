@@ -77,14 +77,17 @@
 
     <!-- PDV -->
     <div id="pdv-card" hidden>
-      <div class="pdv-layout">
-        <div>
-          <div class="card">
-            <h2>Buscar produto</h2>
-            <input type="text" id="search-input" placeholder="Nome, SKU ou código de barras...">
-            <p class="muted scanner-hint">Com o leitor: escaneie e pressione Enter para adicionar direto (1 unidade).</p>
-            <div id="search-results"></div>
-            <div id="add-item-form" class="card add-item-card" hidden>
+      <div class="pdv-counter-shell">
+        <section class="pdv-sale-area" aria-label="Itens da venda">
+          <div class="pdv-entry-bar">
+            <label for="search-input">Código ou produto</label>
+            <div class="pdv-entry-input"><span class="pdv-scan-mark" aria-hidden="true"></span><input type="text" id="search-input" autocomplete="off" placeholder="Passe o código de barras ou pesquise o produto"></div>
+            <p class="scanner-hint">Leitura concluída: o item entra automaticamente no carrinho.</p>
+          </div>
+          <div class="pdv-items-head"><span>Item</span><span>Qtd.</span><span>Unitário</span><span>Total</span></div>
+          <div id="cart-items" class="pdv-items"><p class="pdv-empty-cart">Aguardando leitura do primeiro produto.</p></div>
+          <div id="search-results" class="pdv-search-results"></div>
+          <div id="add-item-form" class="card add-item-card" hidden>
               <div class="product-preview">
                 <img id="add-item-image" src="" alt="" class="product-preview-image">
                 <div id="add-item-name" class="product-preview-name"></div>
@@ -103,22 +106,13 @@
                 <button class="primary grow" id="add-item-confirm">Adicionar ao carrinho</button>
                 <button class="secondary" id="add-item-cancel">Cancelar</button>
               </div>
-            </div>
+              </div>
           </div>
+        </section>
 
-          <div class="card" id="location-card">
-            <h2>Endereço de saída do estoque</h2>
-            <select id="location-select"></select>
-          </div>
-        </div>
-
-        <div class="card pdv-cart" id="pdv-cart-panel" aria-labelledby="cart-title" tabindex="-1">
-          <div class="panel-head"><h2 id="cart-title">Carrinho</h2><button type="button" class="secondary cart-close" id="cart-close-btn">Continuar venda</button></div>
-          <div id="cart-items"><p style="color:var(--muted); font-size:.85rem">Nenhum item ainda.</p></div>
-          <div class="cart-total">
-            <span>Total</span>
-            <span id="cart-total-value">R$ 0,00</span>
-          </div>
+        <aside class="pdv-checkout-area" id="pdv-cart-panel" aria-labelledby="cart-title" tabindex="-1">
+          <div class="pdv-checkout-head"><div><span>Venda atual</span><h2 id="cart-title">Caixa livre</h2></div><button type="button" class="secondary cart-close" id="cart-close-btn">Continuar venda</button></div>
+          <div class="cart-total pdv-total-strip"><span>Total da venda</span><span id="cart-total-value">R$ 0,00</span></div>
 
           <div class="checkout-field checkout-field-first">
             <label>Cliente (opcional)</label>
@@ -140,7 +134,10 @@
             <label>Código da maquininha (NSU/autorização, opcional)</label>
             <input type="text" id="card-reference" placeholder="Ex.: 123456">
           </div>
-
+          <div class="card pdv-location-card" id="location-card">
+            <label for="location-select">Saída do estoque</label>
+            <select id="location-select"></select>
+          </div>
           <button class="primary checkout-action" id="finalize-btn">Finalizar venda</button>
           <button class="secondary checkout-action" id="close-cash-btn">Fechar caixa</button>
 
@@ -152,7 +149,7 @@
               <button class="secondary" id="close-cash-cancel">Cancelar</button>
             </div>
           </div>
-        </div>
+        </aside>
       </div>
     </div>
   </main>
