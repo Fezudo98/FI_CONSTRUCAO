@@ -91,15 +91,18 @@ de um navegador).
    - `CORS_ORIGINS`: os IPs dos outros PCs do depósito na rede local, se forem
      acessar via IP direto (ex.: `http://192.168.0.10:5000`).
    - `DEV_ADMIN_EMAIL` / `DEV_ADMIN_PASSWORD`: credenciais do primeiro usuário.
-3. Rode `iniciar_sistema.bat` (duplo clique). Na primeira vez, ele cria o
-   ambiente virtual Python e instala as dependências automaticamente.
+3. Rode `instalar_sistema.bat` (duplo clique). Ele busca atualizações,
+   prepara o Python, instala as dependências, abre o `.env` para configuração
+   e cria a estrutura inicial do banco.
 4. Rode uma vez, manualmente, a criação do administrador:
    ```
    .venv\Scripts\python.exe create_dev_admin.py
    ```
-5. Nas próximas vezes, é só rodar `iniciar_sistema.bat` — ele atualiza o
-   código (`git pull`), aplica migrações pendentes, verifica a licença e
-   inicia o servidor, abrindo o navegador automaticamente.
+5. Nas próximas vezes, é só rodar `iniciar_sistema.bat` — ele busca e aplica
+   atualizações do repositório, instala dependências novas se existirem,
+   aplica migrações pendentes, verifica a licença e inicia o servidor,
+   abrindo o navegador automaticamente. Para proteger os dados, ele para se
+   detectar alterações locais não versionadas.
 
 ## Acesso pelos outros computadores do depósito
 
@@ -161,7 +164,8 @@ frontend/operacao.html retaguarda: estoque, clientes, orçamentos, pedidos,
 frontend/relatorios.html vendas, ranking de produtos e formas de pagamento
 migrations/            evolução versionada do banco (Alembic)
 scripts/                bootstrap_database.py, check_license.py
-iniciar_sistema.bat    inicialização de produção (update + licença + start)
+instalar_sistema.bat   instalação inicial (update + dependências + banco)
+iniciar_sistema.bat    inicialização diária (update + migrações + licença)
 atualizar.bat          só atualiza (git pull + migrações), sem iniciar
 ```
 
