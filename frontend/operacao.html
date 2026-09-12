@@ -65,7 +65,7 @@
           <div><label>Preço de custo</label><input type="number" step="0.01" id="prod-cost"></div>
           <div><label>Preço de venda</label><input type="number" step="0.01" id="prod-price"></div>
           <div><label>Estoque mínimo</label><input type="number" step="0.01" id="prod-min" value="0"></div>
-          <div><label>Código de barras (opcional, ou use o leitor)</label><input type="text" id="prod-barcode" placeholder="Escaneie ou digite"></div>
+          <div><label>Código de barras</label><div class="barcode-field"><input type="text" id="prod-barcode" placeholder="Escaneie, leia pela câmera ou digite"><button type="button" class="secondary barcode-camera-btn" id="open-barcode-camera">Ler câmera</button></div></div>
           <div><label>Imagem (opcional)</label><input type="file" id="prod-image" accept="image/jpeg,image/png,image/webp"></div>
         </div>
         <button class="primary" id="create-prod-btn" style="margin-top:12px">Criar produto</button>
@@ -339,6 +339,14 @@
       </form>
     </div>
   </main>
+
+  <div class="dialog-overlay barcode-camera-dialog" id="barcode-camera-dialog" role="dialog" aria-modal="true" aria-labelledby="barcode-camera-title" hidden>
+    <div class="dialog-card">
+      <div class="panel-head"><div><h2 id="barcode-camera-title">Ler código de barras</h2><p class="muted" id="barcode-camera-status">Aponte a câmera para o código da embalagem.</p></div><button type="button" class="secondary" id="close-barcode-camera" aria-label="Fechar leitor">Fechar</button></div>
+      <div class="barcode-camera-view"><video id="barcode-camera-video" autoplay muted playsinline></video><div class="barcode-camera-guide" aria-hidden="true"></div></div>
+      <p class="muted barcode-camera-help">Mantenha o código dentro da moldura, com boa iluminação.</p>
+    </div>
+  </div>
 
 <script src="/static/js/ui.js"></script>
 <script src="/static/js/auth.js"></script>

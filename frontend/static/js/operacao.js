@@ -6,6 +6,81 @@ function showAlert(msg, ok) {
   setTimeout(() => { el.hidden = true; }, 5000);
 }
 
+let barcodeCameraStream = null;
+let barcodeDetector = null;
+let barcodeCameraFrame = null;
+
+function stopBarcodeCamera() {
+  if (barcodeCameraFrame) cancelAnimationFrame(barcodeCameraFrame);
+  barcodeCameraFrame = null;
+  if (barcodeCameraStream) barcodeCameraStream.getTracks().forEach(track => track.stop());
+  barcodeCameraStream = null;
+  document.getElementById('barcode-camera-video').srcObject = null;
+  document.getElementById('barcode-camera-dialog').hidden = true;
+  document.body.classList.remove('dialog-open');
+}
+
+async function scanBarcodeFromCamera() {
+  if (!barcodeDetector || !barcodeCameraStream) return;
+  const video = document.getElementById('barcode-camera-video');
+  try {
+    const codes = await barcodeDetector.detect(video);
+    const value = codes[0] && codes[0].rawValue;
+    if (value) {
+      document.getElementById('prod-barcode').value = value;
+      stopBarcodeCamera();
+      showAlert('Código de barras lido: ' + value, true);
+      return;
+    }
+  } catch (_) {
+    // A câmera pode ainda estar inicializando; a próxima leitura tentará novamente.
+  }
+  barcodeCameraFrame = requestAnimationFrame(scanBarcodeFromCamera);
+}
+
+async function openBarcodeCamera() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    showAlert('Este navegador não permite usar a câmera. Digite o código ou use um leitor físico.');
+    return;
+  }
+  if (!('BarcodeDetector' in window)) {
+    showAlert('Leitura pela câmera não é suportada neste navegador. Use o Chrome atualizado no celular ou digite o código.');
+    return;
+  }
+  const dialog = document.getElementById('barcode-camera-dialog');
+  const status = document.getElementById('barcode-camera-status');
+  const video = document.getElementById('barcode-camera-video');
+  dialog.hidden = false;
+  document.body.classList.add('dialog-open');
+  status.textContent = 'Abrindo a câmera traseira…';
+  try {
+    const supported = typeof BarcodeDetector.getSupportedFormats === 'function'
+      ? await BarcodeDetector.getSupportedFormats()
+      : [];
+    const commonFormats = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf', 'codabar'];
+    const formats = commonFormats.filter(format => supported.includes(format));
+    barcodeDetector = formats.length ? new BarcodeDetector({ formats }) : new BarcodeDetector();
+    barcodeCameraStream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+    });
+    video.srcObject = barcodeCameraStream;
+    await video.play();
+    status.textContent = 'Aponte a câmera para o código da embalagem.';
+    barcodeCameraFrame = requestAnimationFrame(scanBarcodeFromCamera);
+  } catch (error) {
+    stopBarcodeCamera();
+    showAlert(error.name === 'NotAllowedError' ? 'Permita o acesso à câmera para fazer a leitura.' : 'Não foi possível abrir a câmera. Tente novamente ou digite o código.');
+  }
+}
+
+document.getElementById('open-barcode-camera').addEventListener('click', openBarcodeCamera);
+document.getElementById('close-barcode-camera').addEventListener('click', stopBarcodeCamera);
+document.getElementById('barcode-camera-dialog').addEventListener('click', event => {
+  if (event.target.id === 'barcode-camera-dialog') stopBarcodeCamera();
+});
+window.addEventListener('beforeunload', stopBarcodeCamera);
+
 const TAB_RELOAD = {
   auditoria: () => loadAuditLogs(),
   clientes: () => loadCustomers(),
