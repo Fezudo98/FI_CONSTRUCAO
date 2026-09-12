@@ -174,6 +174,12 @@ function fmtMoney(v) {
   return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
+  })[char]);
+}
+
 function showAlert(msg, ok) {
   const el = document.getElementById('alert');
   el.className = ok ? 'alert ok' : 'alert err';
@@ -249,8 +255,8 @@ document.getElementById('search-input').addEventListener('input', (e) => {
     const data = await resp.json();
     resultsEl.innerHTML = data.products.map(p => `
       <div class="search-result" data-id="${p.id}">
-        <span>${p.name} <span style="color:var(--muted)">(${p.sku})</span></span>
-        <span>${fmtMoney(p.sale_price)} / ${p.base_unit}</span>
+        <span>${escapeHtml(p.name)} <span style="color:var(--muted)">(${escapeHtml(p.sku)})</span></span>
+        <span>${fmtMoney(p.sale_price)} / ${escapeHtml(p.base_unit)}</span>
       </div>
     `).join('') || '<div style="padding:10px;color:var(--muted)">Nenhum produto encontrado.</div>';
 
@@ -333,8 +339,8 @@ function renderCart() {
     el.innerHTML = cart.map((item, idx) => `
       <div class="cart-item">
         <div class="info">
-          ${item.name}
-          <div class="qty">${item.quantity} ${item.unit} x ${fmtMoney(item.unit_price)}</div>
+          ${escapeHtml(item.name)}
+          <div class="qty">${item.quantity} ${escapeHtml(item.unit)} x ${fmtMoney(item.unit_price)}</div>
         </div>
         <div>
           ${fmtMoney(item.quantity * item.unit_price)}
@@ -376,9 +382,9 @@ document.getElementById('customer-name').addEventListener('input', (e) => {
     const resp = await fetch('/api/customers?q=' + encodeURIComponent(q));
     const data = await resp.json();
     resultsEl.innerHTML = data.customers.map(c => `
-      <div class="search-result" data-id="${c.id}" data-name="${c.name}">
-        <span>${c.name}</span>
-        <span style="color:var(--muted)">${c.phone || c.document || ''}</span>
+      <div class="search-result" data-id="${c.id}" data-name="${escapeHtml(c.name)}">
+        <span>${escapeHtml(c.name)}</span>
+        <span style="color:var(--muted)">${escapeHtml(c.phone || c.document || '')}</span>
       </div>
     `).join('');
     resultsEl.querySelectorAll('.search-result').forEach(el => {
@@ -445,15 +451,15 @@ async function showReceipt(saleId) {
   const sale = data.sale;
 
   const itemsHtml = sale.items.map(i => `
-    <div class="row"><span>${i.quantity} ${i.unit} x ${i.product_name}</span><span>${fmtMoney(i.total)}</span></div>
+    <div class="row"><span>${i.quantity} ${escapeHtml(i.unit)} x ${escapeHtml(i.product_name)}</span><span>${fmtMoney(i.total)}</span></div>
   `).join('');
   const paymentMethodLabels = {
     dinheiro: 'Dinheiro', pix: 'Pix', cartao_debito: 'Cartão débito',
     cartao_credito: 'Cartão crédito', boleto: 'Boleto', transferencia: 'Transferência',
   };
   const paymentsHtml = sale.payments.map(p => `
-    <div class="row"><span>${paymentMethodLabels[p.method] || p.method}</span><span>${fmtMoney(p.amount)}</span></div>
-    ${p.card_reference ? `<div class="row"><span style="color:var(--muted); font-size:.8rem">NSU/autorização</span><span style="color:var(--muted); font-size:.8rem">${p.card_reference}</span></div>` : ''}
+    <div class="row"><span>${escapeHtml(paymentMethodLabels[p.method] || p.method)}</span><span>${fmtMoney(p.amount)}</span></div>
+    ${p.card_reference ? `<div class="row"><span style="color:var(--muted); font-size:.8rem">NSU/autorização</span><span style="color:var(--muted); font-size:.8rem">${escapeHtml(p.card_reference)}</span></div>` : ''}
   `).join('');
 
   document.getElementById('receipt-content').innerHTML = `
@@ -462,7 +468,7 @@ async function showReceipt(saleId) {
       <span style="color:var(--muted); font-size:.8rem">Comprovante de venda #${sale.id}</span>
     </div>
     <div class="row"><span>Data</span><span>${new Date(sale.created_at).toLocaleString('pt-BR')}</span></div>
-    ${sale.customer_name ? `<div class="row"><span>Cliente</span><span>${sale.customer_name}</span></div>` : ''}
+    ${sale.customer_name ? `<div class="row"><span>Cliente</span><span>${escapeHtml(sale.customer_name)}</span></div>` : ''}
     <hr>
     ${itemsHtml}
     <hr>

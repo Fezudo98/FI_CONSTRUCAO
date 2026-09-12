@@ -26,6 +26,7 @@
 
   <main>
     <header class="page-head"><div class="page-head-copy"><h1>Relatórios</h1><p>Resultados de vendas, margem e produtos no período escolhido.</p></div></header>
+    <div id="report-status" class="alert" role="status" aria-live="polite" hidden></div>
     <div class="card">
       <h2>Período</h2>
       <div class="grid grid-2" style="max-width:420px">
@@ -83,9 +84,17 @@ function defaultDates() {
 async function loadDashboard() {
   const date_start = document.getElementById('date-start').value;
   const date_end = document.getElementById('date-end').value;
-  const resp = await fetch(`/api/reports/dashboard?date_start=${date_start}&date_end=${date_end}`);
-  if (!resp.ok) return;
-  const data = await resp.json();
+  const button = document.getElementById('apply-filter-btn');
+  const status = document.getElementById('report-status');
+  button.disabled = true;
+  button.textContent = 'Atualizando…';
+  status.hidden = false;
+  status.className = 'alert';
+  status.textContent = 'Atualizando os indicadores do período…';
+  try {
+    const resp = await fetch(`/api/reports/dashboard?date_start=${date_start}&date_end=${date_end}`);
+    if (!resp.ok) throw new Error('request');
+    const data = await resp.json();
 
   document.getElementById('kpi-revenue').textContent = fmtMoney(data.kpis.revenue);
   document.getElementById('kpi-count').textContent = data.kpis.sale_count;
@@ -95,6 +104,19 @@ async function loadDashboard() {
   renderSalesChart(data.sales_by_day);
   renderPaymentChart(data.payment_breakdown);
   renderProductsChart(data.top_products);
+    if (data.kpis.sale_count) {
+      status.hidden = true;
+    } else {
+      status.className = 'alert ok';
+      status.textContent = 'Não há vendas registradas no período selecionado.';
+    }
+  } catch (_) {
+    status.className = 'alert err';
+    status.textContent = 'Não foi possível carregar os relatórios. Verifique a conexão e tente novamente.';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Aplicar';
+  }
 }
 
 function renderSalesChart(rows) {
