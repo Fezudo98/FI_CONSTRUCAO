@@ -65,9 +65,6 @@ navegador de ponta a ponta):
   usa e se ela oferece API/SDK de integração.
 
 🚧 **Pendente** (fora do escopo desta entrega):
-- Endpoint de licenciamento na VPS (o script `check_license.py` já existe e
-  funciona, mas hoje não bloqueia nada porque o endpoint ainda não foi criado
-  no lado do servidor — ver seção "Licenciamento" abaixo).
 - Cotações formais de compra com múltiplos fornecedores (`SupplierOffer`) —
   modelo de dados já existe, mas o pedido de compra hoje é criado direto com
   um fornecedor já escolhido.
@@ -139,12 +136,17 @@ resultado fica em cache local (`license_cache.json`, fora do git) por até
 `LICENSE_GRACE_DAYS` dias (padrão 7), para o sistema continuar funcionando
 se a internet do depósito cair temporariamente.
 
-Enquanto `LICENSE_CHECK_URL`/`LICENSE_KEY` não estiverem configurados, a
-verificação é **pulada** (não bloqueia nada) — isso é intencional, para
-permitir usar o sistema antes do endpoint de licenciamento existir na VPS.
-Esse endpoint ainda precisa ser construído (ver plano de implementação),
-integrado aos scripts `suspend-client.sh`/`resume-client.sh` da plataforma
-Puma já existente na VPS.
+Se `LICENSE_CHECK_URL`/`LICENSE_KEY` não estiverem configurados, ou a chave
+for inválida/suspensa, a inicialização **bloqueia por segurança** — não é
+possível rodar o sistema em produção sem uma licença ativa.
+
+O endpoint já está no ar, dentro do painel Puma existente na VPS
+(`admin/app.py`, rota pública `GET /api/licenses/check?key=...`, em
+`https://vps69719.publiccloud.com.br/puma/servidores/api/licenses/check`).
+Licenças são geradas e suspensas na própria tela do painel
+(seção "Instalações locais licenciadas"), independente dos clientes
+hospedados em container — o endpoint recebe só a `LICENSE_KEY` e devolve
+`active`/`suspended`, sem acesso a vendas, estoque, clientes ou caixa.
 
 ## Estrutura principal
 
