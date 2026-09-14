@@ -79,10 +79,11 @@ O PC-servidor precisa do **Instalador de Aplicativo/winget**, presente nas
 versões atuais do Windows 10 e 11. Git, Python 3.12 e PostgreSQL são instalados
 automaticamente quando estiverem ausentes.
 
-1. Rode `instalar_sistema.bat` com duplo clique. O instalador solicita permissão
-   de administrador e conduz toda a configuração. Se o arquivo for executado
-   avulso, ele clona o repositório em `C:\ProgramData\FIConstrucao`; dentro de
-   uma cópia Git existente, ele apenas atualiza essa cópia.
+1. Entregue somente o arquivo `instalar_sistema.bat` à cliente, por exemplo na
+   Área de Trabalho, e execute-o com duplo clique. Ele baixa o instalador oficial
+   do GitHub, solicita permissão de administrador e clona o sistema em
+   `C:\ProgramData\FIConstrucao`. Quando executado dentro de uma cópia Git
+   existente, utiliza o `instalar_sistema.ps1` local e atualiza essa cópia.
 2. Informe a chave de licença e crie a senha do primeiro administrador quando
    solicitado. A chave secreta da aplicação, o banco PostgreSQL, o usuário do
    banco, a regra de firewall, os atalhos e o backup diário das 22h são
