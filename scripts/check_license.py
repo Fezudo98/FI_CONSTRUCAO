@@ -51,9 +51,7 @@ def main() -> int:
     try:
         resp = requests.get(check_url, params={"key": license_key}, timeout=8)
         resp.raise_for_status()
-        data = resp.json()
-        status = data.get("status", "active")
-    except Exception as exc:  # rede indisponível, VPS fora do ar, etc.
+    except requests.RequestException as exc:  # rede indisponível, VPS fora do ar, etc.
         print(f"[licenca] Nao foi possivel contatar o servidor de licenca: {exc}")
         cache = _read_cache()
         if cache is None:
@@ -71,6 +69,16 @@ def main() -> int:
 
         print(f"[licenca] Usando cache valido de {cache['checked_at']} (modo offline).")
         return 0
+
+    try:
+        data = resp.json()
+    except (requests.JSONDecodeError, ValueError):
+        print("[licenca] Resposta inválida do servidor. Bloqueando por segurança.")
+        return 1
+    if not isinstance(data, dict) or data.get("status") not in {"active", "suspended"}:
+        print("[licenca] Resposta sem status válido. Bloqueando por segurança.")
+        return 1
+    status = data["status"]
 
     _write_cache(status)
 

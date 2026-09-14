@@ -75,35 +75,28 @@ navegador de ponta a ponta):
 
 ## Instalação no computador do depósito (PC-servidor)
 
-Requisitos: **Python 3.11+** e **PostgreSQL** instalados na máquina que vai
-atuar como servidor (as demais máquinas do depósito não precisam de nada além
-de um navegador).
+O PC-servidor precisa do **Instalador de Aplicativo/winget**, presente nas
+versões atuais do Windows 10 e 11. Git, Python 3.12 e PostgreSQL são instalados
+automaticamente quando estiverem ausentes.
 
-1. Clone este repositório no PC-servidor.
-2. Copie `.env.example` para `.env` e preencha:
-   - `SECRET_KEY`: uma string aleatória longa.
-   - `DATABASE_URL`: string de conexão do PostgreSQL local (crie o banco e o
-     usuário antes, ex.: `createdb fi_construcao`).
-   - `CORS_ORIGINS`: os IPs dos outros PCs do depósito na rede local, se forem
-     acessar via IP direto (ex.: `http://192.168.0.10:5000`).
-   - `DEV_ADMIN_EMAIL` / `DEV_ADMIN_PASSWORD`: credenciais do primeiro usuário.
-3. Rode `instalar_sistema.bat` (duplo clique). Ele busca atualizações,
-   prepara o Python, instala as dependências, abre o `.env` para configuração
-   e cria a estrutura inicial do banco.
-4. Rode uma vez, manualmente, a criação do administrador:
-   ```
-   .venv\Scripts\python.exe create_dev_admin.py
-   ```
-5. Nas próximas vezes, é só rodar `iniciar_sistema.bat` — ele busca e aplica
+1. Rode `instalar_sistema.bat` com duplo clique. O instalador solicita permissão
+   de administrador e conduz toda a configuração. Se o arquivo for executado
+   avulso, ele clona o repositório em `C:\ProgramData\FIConstrucao`; dentro de
+   uma cópia Git existente, ele apenas atualiza essa cópia.
+2. Informe a chave de licença e crie a senha do primeiro administrador quando
+   solicitado. A chave secreta da aplicação, o banco PostgreSQL, o usuário do
+   banco, a regra de firewall, os atalhos e o backup diário das 22h são
+   configurados automaticamente.
+3. Nas próximas vezes, é só rodar `iniciar_sistema.bat` — ele busca e aplica
    atualizações do repositório, instala dependências novas se existirem,
-   aplica migrações pendentes, verifica a licença e inicia o servidor,
+   cria um backup, aplica migrações pendentes, verifica a licença e inicia o servidor,
    abrindo o navegador automaticamente. Para proteger os dados, ele para se
    detectar alterações locais não versionadas. Em produção o servidor é o
    **Waitress** (WSGI de verdade, multi-thread), não o servidor de
    desenvolvimento do Flask.
-6. Rode `agendar_backup.bat` uma vez para agendar o backup diário do banco
-   (ver seção "Backup e restauração" abaixo). Sem isso, uma falha no disco
-   do PC-servidor apaga permanentemente vendas, estoque e financeiro.
+
+Reexecutar o instalador preserva `.env`, usuários e banco. Antes de qualquer
+migração em uma instalação existente, ele exige que o backup seja concluído.
 
 ## Backup e restauração
 

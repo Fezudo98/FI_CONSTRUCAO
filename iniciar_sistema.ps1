@@ -1,3 +1,5 @@
+param([switch]$Elevated)
+
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
@@ -13,7 +15,7 @@ function Sync-Repository {
     if ($changes) { throw 'Há alterações locais pendentes. O sistema não foi atualizado para evitar sobrescrever arquivos.' }
     $branch = (git branch --show-current).Trim()
     if (-not $branch) { throw 'Não foi possível identificar a branch atual do sistema.' }
-    Write-Host '[1/4] Buscando e aplicando atualizações...'
+    Write-Host '[1/5] Buscando e aplicando atualizações...'
     git fetch origin
     if ($LASTEXITCODE -ne 0) { throw 'Não foi possível buscar atualizações do repositório remoto.' }
     git pull --ff-only origin $branch
@@ -34,15 +36,19 @@ try {
 
     Sync-Repository
     $venvPython = Join-Path $PSScriptRoot '.venv\Scripts\python.exe'
-    Write-Host '[2/4] Verificando dependências...'
+    Write-Host '[2/5] Verificando dependências...'
     & $venvPython -m pip install --disable-pip-version-check -r requirements.txt
     if ($LASTEXITCODE -ne 0) { throw 'Não foi possível instalar as dependências novas.' }
 
-    Write-Host '[3/4] Aplicando atualizações do banco...'
+    Write-Host '[3/5] Criando backup antes de atualizar o banco...'
+    & $venvPython scripts\backup_database.py
+    if ($LASTEXITCODE -ne 0) { throw 'O backup falhou; a atualização do banco foi cancelada por segurança.' }
+
+    Write-Host '[4/5] Aplicando atualizações do banco...'
     & $venvPython -m flask db upgrade
     if ($LASTEXITCODE -ne 0) { throw 'Não foi possível aplicar as atualizações do banco.' }
 
-    Write-Host '[4/4] Verificando licença...'
+    Write-Host '[5/5] Verificando licença...'
     & $venvPython scripts\check_license.py
     if ($LASTEXITCODE -ne 0) { throw 'Licença indisponível ou suspensa. O sistema não será iniciado.' }
 
