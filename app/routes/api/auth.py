@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify
 
 from app.models.user import User
-from app.services.auth import check_password, login_user, logout_user, current_user
+from app.extensions import db
+from app.models.base import utcnow
+from app.services.auth import check_password, login_user, logout_user, current_user, login_required
 
 bp = Blueprint("api_auth", __name__, url_prefix="/api/auth")
 
@@ -34,10 +36,21 @@ def me():
     return jsonify({"user": _serialize_user(user)})
 
 
+@bp.post("/onboarding/complete")
+@login_required
+def complete_onboarding():
+    user = current_user()
+    if user.onboarding_completed_at is None:
+        user.onboarding_completed_at = utcnow()
+        db.session.commit()
+    return jsonify({"ok": True, "onboarding_completed": True})
+
+
 def _serialize_user(user: User):
     return {
         "id": user.id,
         "name": user.name,
         "email": user.email,
         "role": user.role,
+        "onboarding_completed": user.onboarding_completed_at is not None,
     }

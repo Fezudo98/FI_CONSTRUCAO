@@ -255,7 +255,7 @@ document.querySelectorAll('[data-pdv-action]').forEach(button => {
 
 document.addEventListener('keydown', event => {
   if (event.ctrlKey || event.altKey || event.metaKey) return;
-  const routes = { F1: '/index.html', F3: '/operacao.html', F4: '/relatorios.html' };
+  const routes = { F1: '/index.html', F3: '/operacao.html', F4: '/relatorios.html', F9: '/index.html?tour=1' };
   if (routes[event.key]) {
     event.preventDefault();
     window.location.assign(routes[event.key]);

@@ -7,6 +7,7 @@ async function requireAuth() {
   }
   const nameEl = document.getElementById('current-user-name');
   if (nameEl) nameEl.textContent = data.user.name + ' (' + data.user.role + ')';
+  document.dispatchEvent(new CustomEvent('fi:user-ready', { detail: data.user }));
   return data.user;
 }
 

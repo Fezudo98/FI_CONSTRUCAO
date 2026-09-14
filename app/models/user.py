@@ -18,6 +18,7 @@ class User(db.Model, TimestampMixin, SoftDeleteMixin):
     email = db.Column(db.String(150), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(20), nullable=False, default=ROLE_CASHIER)
+    onboarding_completed_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     permission_overrides = db.relationship("UserPermissionOverride", back_populates="user")
 

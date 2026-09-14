@@ -24,6 +24,21 @@ def test_me_requires_login(client):
 def test_me_after_login(auth_client):
     resp = auth_client.get("/api/auth/me")
     assert resp.get_json()["user"]["email"] == "admin@teste.com"
+    assert resp.get_json()["user"]["onboarding_completed"] is False
+
+
+def test_complete_onboarding_is_persisted(auth_client):
+    resp = auth_client.post("/api/auth/onboarding/complete")
+    assert resp.status_code == 200
+    assert resp.get_json()["onboarding_completed"] is True
+
+    resp = auth_client.get("/api/auth/me")
+    assert resp.get_json()["user"]["onboarding_completed"] is True
+
+
+def test_complete_onboarding_requires_login(client):
+    resp = client.post("/api/auth/onboarding/complete")
+    assert resp.status_code == 401
 
 
 def test_logout(auth_client):
