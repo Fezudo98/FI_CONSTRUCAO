@@ -1,4 +1,7 @@
-param([switch]$Elevated)
+param(
+    [switch]$Elevated,
+    [string]$InstallUserSid = ''
+)
 
 $ErrorActionPreference = 'Stop'
 $RepositoryUrl = 'https://github.com/Fezudo98/FI_CONSTRUCAO.git'
@@ -19,7 +22,8 @@ function Test-Administrator {
 }
 
 function Restart-Elevated {
-    $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ('"{0}"' -f $PSCommandPath), '-Elevated')
+    $sid = if ($InstallUserSid) { $InstallUserSid } else { [Security.Principal.WindowsIdentity]::GetCurrent().User.Value }
+    $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ('"{0}"' -f $PSCommandPath), '-Elevated', '-InstallUserSid', $sid)
     Start-Process powershell.exe -Verb RunAs -ArgumentList $arguments -WorkingDirectory $PSScriptRoot
 }
 
@@ -70,7 +74,7 @@ function Sync-Repository {
             & git clone $RepositoryUrl $InstallDir
             if ($LASTEXITCODE -ne 0) { throw 'Não foi possível clonar o sistema do GitHub.' }
         }
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $InstallDir 'instalar_sistema.ps1') -Elevated
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $InstallDir 'instalar_sistema.ps1') -Elevated -InstallUserSid $InstallUserSid
         if ($LASTEXITCODE -ne 0) { throw 'A instalação na pasta definitiva não foi concluída.' }
         exit 0
     }
@@ -134,7 +138,8 @@ function Find-PostgresTool([string]$Name) {
     $command = Get-Command "$Name.exe" -ErrorAction SilentlyContinue
     if ($command) { return $command.Source }
     Get-ChildItem "$env:ProgramFiles\PostgreSQL\*\bin\$Name.exe" -ErrorAction SilentlyContinue |
-        Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
+        Sort-Object { [version]$_.Directory.Parent.Name } -Descending |
+        Select-Object -First 1 -ExpandProperty FullName
 }
 
 function Ensure-PostgreSQL {
@@ -154,6 +159,11 @@ function Ensure-PostgreSQL {
         $installedNow = $true
     }
     if (-not $psql) { throw 'O utilitário psql não foi localizado.' }
+    $pgDump = Find-PostgresTool 'pg_dump'
+    $pgRestore = Find-PostgresTool 'pg_restore'
+    if (-not $pgDump -or -not $pgRestore) { throw 'As ferramentas de backup do PostgreSQL não foram localizadas.' }
+    Set-EnvValue 'PG_DUMP_PATH' $pgDump
+    Set-EnvValue 'PG_RESTORE_PATH' $pgRestore
     $postgresService = Get-Service -Name 'postgresql*' -ErrorAction SilentlyContinue |
         Sort-Object Name -Descending | Select-Object -First 1
     if ($postgresService -and $postgresService.Status -ne 'Running') {
@@ -200,6 +210,11 @@ function Ensure-Administrator([string]$PythonPath) {
 }
 
 function Configure-OperatingSystem([string]$PythonPath) {
+    $sid = if ($InstallUserSid) { $InstallUserSid } else { [Security.Principal.WindowsIdentity]::GetCurrent().User.Value }
+    $permission = "*${sid}:(OI)(CI)M"
+    & icacls.exe $PSScriptRoot /grant:r $permission /T /C /Q | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Não foi possível liberar a pasta do sistema para atualizações diárias.' }
+
     $rule = 'F.I Construção - PDV porta 5000'
     if (-not (Get-NetFirewallRule -DisplayName $rule -ErrorAction SilentlyContinue)) {
         New-NetFirewallRule -DisplayName $rule -Direction Inbound -Action Allow -Protocol TCP -LocalPort 5000 -Profile Private | Out-Null
@@ -225,6 +240,7 @@ try {
     Write-Host ' F.I Construção - Instalação completa' -ForegroundColor Cyan
     Write-Host '================================================' -ForegroundColor Cyan
     if (-not (Test-Administrator)) { Restart-Elevated; exit 0 }
+    if (-not $InstallUserSid) { $InstallUserSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value }
 
     Ensure-Prerequisites
     Sync-Repository

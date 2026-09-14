@@ -86,8 +86,8 @@ automaticamente quando estiverem ausentes.
    existente, utiliza o `instalar_sistema.ps1` local e atualiza essa cópia.
 2. Informe a chave de licença e crie a senha do primeiro administrador quando
    solicitado. A chave secreta da aplicação, o banco PostgreSQL, o usuário do
-   banco, a regra de firewall, os atalhos e o backup diário das 22h são
-   configurados automaticamente.
+   banco, as ferramentas de backup, as permissões da pasta, a regra de firewall,
+   os atalhos e o backup diário das 22h são configurados automaticamente.
 3. Nas próximas vezes, é só rodar `iniciar_sistema.bat` — ele busca e aplica
    atualizações do repositório, instala dependências novas se existirem,
    cria um backup, aplica migrações pendentes, verifica a licença e inicia o servidor,
@@ -111,10 +111,9 @@ código são recuperáveis pelo Git, os dados não.
 - Os arquivos ficam em `backups/` (fora do Git), formato `.dump` do
   `pg_dump`, com um backup por dia — mantidos por `BACKUP_RETENTION_DAYS`
   dias (padrão 14; ajustável no `.env`).
-- Exige as ferramentas de linha de comando do PostgreSQL instaladas junto
-  com o servidor (`pg_dump`/`pg_restore`). Se não estiverem no PATH,
-  configure `PG_DUMP_PATH`/`PG_RESTORE_PATH` no `.env` apontando para a
-  pasta `bin` da instalação do PostgreSQL.
+- O instalador localiza `pg_dump`/`pg_restore` mesmo quando não estiverem no
+  PATH e grava os caminhos no `.env`. Em uma configuração manual, os campos
+  `PG_DUMP_PATH`/`PG_RESTORE_PATH` continuam disponíveis.
 - **Restaurar um backup** (substitui os dados atuais — peça confirmação
   antes de rodar, isso é irreversível):
   ```

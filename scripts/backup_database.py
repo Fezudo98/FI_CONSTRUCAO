@@ -6,7 +6,9 @@ Uso: python scripts/backup_database.py
 Agendamento: scripts/agendar_backup.ps1 registra isso como tarefa diaria do
 Windows (Agendador de Tarefas).
 """
+import glob
 import os
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timedelta
@@ -21,6 +23,29 @@ load_dotenv()
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BACKUPS_DIR = os.path.join(PROJECT_DIR, "backups")
 RETENTION_DAYS = int(os.environ.get("BACKUP_RETENTION_DAYS", "14"))
+
+
+def _find_pg_dump():
+    configured = os.environ.get("PG_DUMP_PATH", "").strip()
+    if configured and os.path.isfile(configured):
+        return configured
+
+    available = shutil.which("pg_dump")
+    if available:
+        return available
+
+    program_files = os.environ.get("ProgramFiles", r"C:\Program Files")
+    candidates = glob.glob(os.path.join(program_files, "PostgreSQL", "*", "bin", "pg_dump.exe"))
+    if candidates:
+        def version(path):
+            directory = os.path.basename(os.path.dirname(os.path.dirname(path)))
+            try:
+                return tuple(int(part) for part in directory.split("."))
+            except ValueError:
+                return (0,)
+
+        return max(candidates, key=version)
+    return configured or "pg_dump"
 
 
 def _parse_database_url(url: str):
@@ -67,7 +92,7 @@ def main() -> int:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     dest = os.path.join(BACKUPS_DIR, f"fi_construcao_{timestamp}.dump")
 
-    pg_dump = os.environ.get("PG_DUMP_PATH", "").strip() or "pg_dump"
+    pg_dump = _find_pg_dump()
     env = os.environ.copy()
     if conn["password"]:
         env["PGPASSWORD"] = conn["password"]
