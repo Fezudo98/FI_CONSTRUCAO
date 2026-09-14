@@ -91,7 +91,8 @@ automaticamente quando estiverem ausentes.
 3. Nas próximas vezes, é só rodar `iniciar_sistema.bat` — ele busca e aplica
    atualizações do repositório, instala dependências novas se existirem,
    cria um backup, aplica migrações pendentes, verifica a licença e inicia o servidor,
-   abrindo o navegador automaticamente. Para proteger os dados, ele para se
+   mostra o endereço de acesso pelo celular e abre o navegador automaticamente
+   somente depois que o servidor estiver pronto. Para proteger os dados, ele para se
    detectar alterações locais não versionadas. Em produção o servidor é o
    **Waitress** (WSGI de verdade, multi-thread), não o servidor de
    desenvolvimento do Flask.
